@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
             resetCheckBoxes()
         }
     }
+
     private fun setupAlarm() {
         alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, ResetCheckBoxReceiver::class.java)
