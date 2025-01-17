@@ -1,14 +1,24 @@
 package com.example.water
 
+import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.water.databinding.ActivityMainBinding
 import java.util.Calendar
 
@@ -27,32 +37,45 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         recover()
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            checkBoxResetReceiver,
+            IntentFilter("RESET_CHECK_BOXES")
+        )
         setupAlarm()
         binding.resetbutton.setOnClickListener{
             resetCheckBoxes()
         }
+        binding.buttonTriggerBroadcast.setOnClickListener{
+            //sendLocalBroadcast()
+            setupAlarm()
+        }
+    }
+
+    private fun sendLocalBroadcast() {
+        val localIntent = Intent("RESET_CHECK_BOXES")
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent)
+        Log.d("MainActivity", "Broadcast sent manually.")
     }
 
     private fun setupAlarm() {
-        alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, ResetCheckBoxReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        // 设置目标时间
         val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 4)
-        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 42)
         calendar.set(Calendar.SECOND, 0)
+
+        // 如果当前时间已经过了设定时间则将时间调整为第二天
         if (calendar.before(Calendar.getInstance())) {
             calendar.add(Calendar.DAY_OF_MONTH, 1)
         }
-        alarmManager.setRepeating(
-            AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-            AlarmManager.INTERVAL_DAY, pendingIntent
-        )
+
+        // 创建一个 Handler，延迟触发广播
+        val handler = Handler(Looper.getMainLooper())
+        handler.postDelayed({
+            sendLocalBroadcast() // 发送局部广播
+        }, calendar.timeInMillis - System.currentTimeMillis()) // 延迟时间为目标时间 - 当前时间
+
+        Log.d("AlarmSetup", "Alarm has been set to send broadcast at: ${calendar.timeInMillis - System.currentTimeMillis()}")
     }
 
     private fun recover() {
@@ -99,5 +122,27 @@ class MainActivity : AppCompatActivity() {
         editor.putBoolean("checkBox6", binding.checkBox6.isChecked)
         editor.putBoolean("checkBox7", binding.checkBox7.isChecked)
         editor.apply()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // 注销广播接收器
+        unregisterReceiver(checkBoxResetReceiver)
+    }
+
+    private val checkBoxResetReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == "RESET_CHECK_BOXES") {
+                // 只有当Activity在前台时才重置复选框
+                if (isInForeground()) {
+                    resetCheckBoxes()
+                }
+            }
+        }
+    }
+
+    private fun isInForeground(): Boolean {
+        // 检查当前Activity是否在前台
+        return ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
     }
 }
