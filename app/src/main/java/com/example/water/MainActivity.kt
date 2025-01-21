@@ -6,15 +6,26 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,8 +37,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -40,10 +55,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         scheduleResetTask(this)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
+            HideSystemBars()
             waterTheme {
-                Checklist()
+                mainscreen()
             }
+        }
+    }
+}
+
+@Composable
+fun HideSystemBars() {
+    val view = LocalView.current
+    val window = (view.context as ComponentActivity).window
+    // 使用 LaunchedEffect 确保系统栏在 UI 加载完成后隐藏
+    LaunchedEffect(Unit) {
+        WindowInsetsControllerCompat(window, view).apply {
+            hide(WindowInsetsCompat.Type.systemBars()) // 隐藏导航栏和状态栏
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE // 设置手势行为
         }
     }
 }
@@ -56,12 +87,12 @@ fun ResetButton(onClick: () -> Unit) {
 }
 
 @Composable
-fun Checklist(
+fun CheckList(
     modifier: Modifier = Modifier
 ) {
     // 使用 SharedPreferences 存储复选框状态
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE)
+    val sharedPreferences = context.getSharedPreferences("CheckList_prefs", Context.MODE_PRIVATE)
     Log.d("maininit", "Updated checkbox states: ${sharedPreferences.getString("checkbox_states", "")}")
     // 初始化状态
     var checkboxStates by remember {
@@ -126,8 +157,8 @@ private fun scheduleResetTask(context: Context) {
     val now = Calendar.getInstance()
     val resetTime = Calendar.getInstance().apply {
         timeZone = now.timeZone // 确保时区一致
-        set(Calendar.HOUR_OF_DAY, 14)
-        set(Calendar.MINUTE, 17)
+        set(Calendar.HOUR_OF_DAY, 4)
+        set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
     }
 
@@ -141,24 +172,60 @@ private fun scheduleResetTask(context: Context) {
         .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
         .build()
 
-    Log.d("TimeZone", "now timezone: ${now.timeZone}")
-    Log.d("TimeZone", "resetTime timezone: ${resetTime.timeZone}")
-    Log.d("now_time", "now: ${now.timeInMillis}")
-    Log.d("reset_time", "reset: ${resetTime.timeInMillis}")
-    Log.d("initialDelay", "initialDelay: $initialDelay")
-//    val workRequest = PeriodicWorkRequestBuilder<ResetCheckboxWorker>(15, TimeUnit.MINUTES) // 设置 15 分钟周期
-//        .setInitialDelay(1, TimeUnit.MINUTES) // 1 分钟后执行
-//        .build()
     WorkManager.getInstance(context).enqueueUniquePeriodicWork(
         "resetCheckboxTask",
         ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, // 取消已有任务并重新排队
         workRequest
     )
-    val workInfo = WorkManager.getInstance(context)
-        .getWorkInfoById(workRequest.id)
-        .get()
-    if (workInfo != null) {
-        Log.d("WorkStatus", "WorkInfo: ${workInfo.state}")
+}
+
+@Composable
+fun BottomBar(){
+    BottomAppBar(){
+        Row (
+            modifier = Modifier
+                .fillMaxWidth(), // 让Row占据整个宽度
+            horizontalArrangement = Arrangement.SpaceEvenly // 图标之间等距分布
+        ) {
+            IconButton(onClick = { /* do something */ }) {
+                Icon(
+                    Icons.Default.Home,
+                    contentDescription = "首页",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            IconButton(onClick = { /* do something */ }) {
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = "日历",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            IconButton(onClick = { /* do something */ }) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "设置",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun mainscreen(){
+    Scaffold(
+        bottomBar = {
+            BottomBar()
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize() // 让Box占据整个屏幕
+                .padding(innerPadding) // 使用Scaffold提供的内边距
+        ) {
+            CheckList()
+        }
     }
 }
 
@@ -166,6 +233,6 @@ private fun scheduleResetTask(context: Context) {
 @Composable
 fun GreetingPreview() {
     waterTheme {
-        Checklist()
+        mainscreen()
     }
 }

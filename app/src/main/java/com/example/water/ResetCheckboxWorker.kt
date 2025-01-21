@@ -11,14 +11,12 @@ class ResetCheckboxWorker(
 ) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        Log.d("ResetCheckboxWorker", "Worker is running")
         // 模拟通过 SharedPreferences 重置状态
         val sharedPreferences = applicationContext.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE)
         with(sharedPreferences.edit()) {
             putString("checkbox_states", List(8) { false }.joinToString(","))
             apply()
         }
-        Log.d("ResetCheckboxWorker", "Updated checkbox states: ${sharedPreferences.getString("checkbox_states", "")}")
         return Result.success()
     }
 }
