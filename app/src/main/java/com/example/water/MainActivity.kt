@@ -1,11 +1,13 @@
 package com.example.water
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,25 +38,47 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.water.screen.mainscreen
+import com.example.water.screen.BottomBar
+import com.example.water.screen.CalendarScreen
+import com.example.water.screen.Mainscreen
 import com.example.water.ui.theme.waterTheme
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        scheduleResetTask(this)
+        //scheduleResetTask(this)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             HideSystemBars()
+            val navController = rememberNavController()
             waterTheme {
-                mainscreen()
+                Scaffold(
+                    bottomBar = { BottomBar(navController = navController) }
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "main",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable("main") { Mainscreen() }
+                        composable("calendar") { CalendarScreen() }
+                    }
+                }
             }
+//            waterTheme {
+//                //Mainscreen()
+//                CalendarScreen()
+//            }
         }
     }
 }
@@ -77,8 +101,8 @@ private fun scheduleResetTask(context: Context) {
     val now = Calendar.getInstance()
     val resetTime = Calendar.getInstance().apply {
         timeZone = now.timeZone // 确保时区一致
-        set(Calendar.HOUR_OF_DAY, 4)
-        set(Calendar.MINUTE, 0)
+        set(Calendar.HOUR_OF_DAY, 16)
+        set(Calendar.MINUTE, 20)
         set(Calendar.SECOND, 0)
     }
 
@@ -99,10 +123,11 @@ private fun scheduleResetTask(context: Context) {
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true,showSystemUi = true)
 @Composable
 fun GreetingPreview() {
     waterTheme {
-        mainscreen()
+        Mainscreen()
     }
 }

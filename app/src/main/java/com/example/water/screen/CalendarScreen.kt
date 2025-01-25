@@ -1,9 +1,11 @@
 package com.example.water.screen
 
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +48,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.water.ui.theme.waterTheme
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -137,50 +143,196 @@ fun WeekDaysRow() {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
+// 更新 CalendarGrid 参数
 @Composable
-fun CalendarGrid(currentDate: LocalDate) {
+fun CalendarGrid(
+    currentDate: LocalDate,
+    selectedDate: LocalDate?,
+    onDateClick: (LocalDate) -> Unit
+) {
     val calendarDates = remember(currentDate) { generateCalendarDates(currentDate) }
-    WeekDaysRow() // 添加星期行
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(7),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        items(calendarDates) { calendarDate ->
-            CalendarDayCell(calendarDate)
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        WeekDaysRow()
+        LazyVerticalGrid(columns = GridCells.Fixed(7)) {
+            items(calendarDates) { calendarDate ->
+                CalendarDayCell(
+                    calendarDate = calendarDate,
+                    isSelected = calendarDate.date == selectedDate,
+                    onClick = {
+                        if (calendarDate.isCurrentMonth) {
+                            onDateClick(calendarDate.date)
+                        }
+                    }
+                )
+            }
         }
     }
 }
 
+// 更新 CalendarDayCell
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CalendarDayCell(calendarDate: CalendarDate) {
+fun CalendarDayCell(
+    calendarDate: CalendarDate,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
-            .aspectRatio(1f) // 保持正方形
+//            .weight(1f)
+            .aspectRatio(1f)
             .padding(4.dp)
+            .clickable(
+                enabled = calendarDate.isCurrentMonth,
+                onClick = onClick
+            )
             .background(
-                color = if (calendarDate.isCurrentMonth) Color.LightGray.copy(alpha = 0.3f)
-                else Color.Transparent,
+                color = when {
+                    isSelected -> Color.Blue.copy(alpha = 0.3f)
+                    calendarDate.isCurrentMonth -> Color.LightGray.copy(alpha = 0.3f)
+                    else -> Color.Transparent
+                },
+                shape = CircleShape
+            )
+            .border(
+                width = if (isSelected) 2.dp else 0.dp,
+                color = if (isSelected) Color.Blue else Color.Transparent,
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = calendarDate.date.dayOfMonth.toString(),
-            color = if (calendarDate.isCurrentMonth) Color.Black else Color.Gray,
-            fontSize = 16.sp
+            color = when {
+                isSelected -> Color.Blue
+                calendarDate.isCurrentMonth -> Color.Black
+                else -> Color.Gray
+            }
         )
+    }
+}
+
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Composable
+//fun CalendarDayCell(calendarDate: CalendarDate) {
+//    Box(
+//        modifier = Modifier
+//            .aspectRatio(1f) // 保持正方形
+//            .padding(4.dp)
+//            .background(
+//                color = if (calendarDate.isCurrentMonth) Color.LightGray.copy(alpha = 0.3f)
+//                else Color.Transparent,
+//                shape = CircleShape
+//            ),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        Text(
+//            text = calendarDate.date.dayOfMonth.toString(),
+//            color = if (calendarDate.isCurrentMonth) Color.Black else Color.Gray,
+//            fontSize = 16.sp
+//        )
+//    }
+//}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun BottomWaterDataView(selectedDate: LocalDate?, cups: Int) {
+    val formattedDate = selectedDate?.format(
+        DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    ) ?: ""
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (selectedDate != null) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // 日期标题
+                Text(
+                    text = "📅 $formattedDate",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Spacer(Modifier.height(8.dp))
+
+                // 喝水数据展示
+                if (cups > 0) {
+                    Text(
+                        text = "当日喝水杯数：",
+                        fontSize = 16.sp
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        repeat(cups) {
+                            Text("🥛", fontSize = 24.sp, modifier = Modifier.padding(2.dp))
+                        }
+                        Text(
+                            text = "$cups 杯",
+                            color = Color.Blue,
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "当日未记录喝水",
+                        color = Color.Gray,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        } else {
+            Text("点击日期查看喝水记录", color = Color.Gray)
+        }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarScreen() {
-    val currentDate = remember { LocalDate.now() }
-    Column {
-        TopYearMonthBar(currentDate)
-        CalendarGrid(currentDate)
+    val context = LocalContext.current
+    val sharedPreferences = remember {
+        context.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE)
     }
+    val currentDate = remember { LocalDate.now() }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+
+    // 获取选中日期的喝水杯数
+    val selectedCups = remember(selectedDate) {
+        selectedDate?.let { date ->
+            val dateKey = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            val historyJson = sharedPreferences.getString("daily_counts", "{}")
+            val historyType = object : TypeToken<Map<String, Int>>() {}.type
+            val history = Gson().fromJson<Map<String, Int>>(historyJson, historyType)
+            history?.get(dateKey) ?: 0 // 无记录返回0
+        } ?: 0
+    }
+
+//    Scaffold(
+//        bottomBar = {
+//            BottomBar()
+//        }
+//    ) { innerPadding ->
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize() // 让Box占据整个屏幕
+//                .padding(innerPadding) // 使用Scaffold提供的内边距
+//        ) {
+            Column {
+                TopYearMonthBar(currentDate)
+                CalendarGrid(
+                    currentDate = currentDate,
+                    selectedDate = selectedDate,
+                    onDateClick = { date -> selectedDate = date }
+                )
+                BottomWaterDataView(selectedDate, selectedCups)
+            }
+        //}
+    //}
 }
 
 @RequiresApi(Build.VERSION_CODES.O)

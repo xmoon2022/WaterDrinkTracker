@@ -2,7 +2,9 @@ package com.example.water.screen
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,50 +38,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.time.LocalDate
 
-@Composable
-fun BottomBar(){
-    BottomAppBar(){
-        Row (
-            modifier = Modifier
-                .fillMaxWidth(), // 让Row占据整个宽度
-            horizontalArrangement = Arrangement.SpaceEvenly // 图标之间等距分布
-        ) {
-            IconButton(onClick = { /* do something */ }) {
-                Icon(
-                    Icons.Default.Home,
-                    contentDescription = "首页",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            IconButton(onClick = { /* do something */ }) {
-                Icon(
-                    Icons.Default.DateRange,
-                    contentDescription = "日历",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            IconButton(onClick = { /* do something */ }) {
-                Icon(
-                    Icons.Default.Settings,
-                    contentDescription = "设置",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-    }
-}
-
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CheckList(
     modifier: Modifier = Modifier
 ) {
-    // 使用 SharedPreferences 存储复选框状态
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE)
-    //Log.d("ResetCheckboxWorker", "Updated checkbox states: ${sharedPreferences.getString("checkbox_states", "")}")
-    // 初始化状态
-    var checkboxStates by remember(sharedPreferences.getString("checkbox_states", null)) {
+    val sharedPreferences = remember { context.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE) }
+    var checkboxStates by remember {
         mutableStateOf(
             sharedPreferences.getString("checkbox_states", null)
                 ?.split(",")
@@ -87,25 +57,52 @@ fun CheckList(
                 ?: List(8) { false }
         )
     }
-    // 监听 SharedPreferences 的变化并更新状态
-    // 替换旧的 LaunchedEffect 代码
+
+    // 处理日期变更和自动保存
+    LaunchedEffect(Unit) {
+        val today = LocalDate.now().toString()
+        val lastSavedDate = sharedPreferences.getString("last_saved_date", null)
+
+        if (lastSavedDate != null && lastSavedDate != today) {
+            // 保存前一天的计数
+            val previousStates = sharedPreferences.getString("checkbox_states", null)
+                ?.split(",")
+                ?.map { it.toBoolean() } ?: List(8) { false }
+            val previousCount = previousStates.count { it }
+
+            // 更新历史记录
+            val historyJson = sharedPreferences.getString("daily_counts", "{}")
+            val historyType = object : TypeToken<MutableMap<String, Int>>() {}.type
+            val history = Gson().fromJson<MutableMap<String, Int>>(historyJson, historyType) ?: mutableMapOf()
+            history[lastSavedDate] = previousCount
+
+            // 重置当天状态
+            val resetStates = List(8) { false }
+            with(sharedPreferences.edit()) {
+                putString("daily_counts", Gson().toJson(history))
+                putString("checkbox_states", resetStates.joinToString(","))
+                putString("last_saved_date", today)
+                apply()
+            }
+            checkboxStates = resetStates
+        } else if (lastSavedDate == null) {
+            sharedPreferences.edit().putString("last_saved_date", today).apply()
+        }
+    }
+
+    // 监听状态变化
     DisposableEffect(sharedPreferences) {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == "checkbox_states") {
-                val newStates = sharedPreferences.getString("checkbox_states", null)
+                checkboxStates = sharedPreferences.getString("checkbox_states", null)
                     ?.split(",")
-                    ?.map { it.toBoolean() }
-                    ?: List(8) { false }
-                checkboxStates = newStates
+                    ?.map { it.toBoolean() } ?: List(8) { false }
             }
         }
-        // 注册监听器
         sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
-        // 在组件销毁时自动注销监听器
-        onDispose {
-            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
-        }
+        onDispose { sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener) }
     }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -119,49 +116,73 @@ fun CheckList(
                     Checkbox(
                         checked = checkboxStates[i],
                         onCheckedChange = {
-                            val updatedStates = checkboxStates.toMutableList()
-                            updatedStates[i] = it
-                            checkboxStates = updatedStates
-                            // 保存状态到 SharedPreferences
-                            with(sharedPreferences.edit()) {
-                                putString("checkbox_states", updatedStates.joinToString(","))
-                                apply()
-                            }
+                            val newStates = checkboxStates.toMutableList().apply { this[i] = it }
+                            checkboxStates = newStates
+
+                            // 更新复选框状态
+                            sharedPreferences.edit()
+                                .putString("checkbox_states", newStates.joinToString(","))
+                                .apply()
+
+                            // 更新当日计数
+                            val today = LocalDate.now().toString()
+                            val count = newStates.count { it }
+                            val historyJson = sharedPreferences.getString("daily_counts", "{}")
+                            val historyType = object : TypeToken<MutableMap<String, Int>>() {}.type
+                            val history = Gson().fromJson<MutableMap<String, Int>>(historyJson, historyType) ?: mutableMapOf()
+                            history[today] = count
+
+                            sharedPreferences.edit()
+                                .putString("daily_counts", Gson().toJson(history))
+                                .apply()
                         }
                     )
-                    Text(text = "第${i + 1}杯")
+                    Text("第${i + 1}杯")
                 }
             }
+
             Spacer(Modifier.height(16.dp))
-            FilledTonalButton(onClick = {
-                // 重置所有复选框的状态
-                checkboxStates = List(8) { false }
-                // 保存状态到 SharedPreferences
-                with(sharedPreferences.edit()) {
-                    putString("checkbox_states", checkboxStates.joinToString(","))
-                    apply()
+            FilledTonalButton(
+                onClick = {
+                    // 重置当日状态
+                    val resetStates = List(8) { false }
+                    checkboxStates = resetStates
+                    sharedPreferences.edit()
+                        .putString("checkbox_states", resetStates.joinToString(","))
+                        .apply()
+
+                    // 更新当日计数为0
+                    val today = LocalDate.now().toString()
+                    val historyJson = sharedPreferences.getString("daily_counts", "{}")
+                    val historyType = object : TypeToken<MutableMap<String, Int>>() {}.type
+                    val history = Gson().fromJson<MutableMap<String, Int>>(historyJson, historyType) ?: mutableMapOf()
+                    history[today] = 0
+
+                    sharedPreferences.edit()
+                        .putString("daily_counts", Gson().toJson(history))
+                        .apply()
                 }
-            })
-            {
+            ) {
                 Text("重置")
             }
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun mainscreen(){
-    Scaffold(
-        bottomBar = {
-            BottomBar()
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize() // 让Box占据整个屏幕
-                .padding(innerPadding) // 使用Scaffold提供的内边距
-        ) {
+fun Mainscreen(){
+//    Scaffold(
+//        bottomBar = {
+//            BottomBar()
+//        }
+//    ) { innerPadding ->
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize() // 让Box占据整个屏幕
+//                .padding(innerPadding) // 使用Scaffold提供的内边距
+//        ) {
             CheckList()
-        }
-    }
+        //}
+    //}
 }
