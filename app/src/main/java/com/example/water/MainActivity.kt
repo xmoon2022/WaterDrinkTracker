@@ -1,65 +1,38 @@
 package com.example.water
 
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.example.water.screen.BottomBar
 import com.example.water.screen.CalendarScreen
-import com.example.water.screen.Mainscreen
+import com.example.water.screen.MainScreen
+import com.example.water.screen.SettingsScreen
 import com.example.water.ui.theme.waterTheme
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        //scheduleResetTask(this)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            HideSystemBars()
+            //HideSystemBars()
             val navController = rememberNavController()
             waterTheme {
                 Scaffold(
@@ -70,19 +43,17 @@ class MainActivity : ComponentActivity() {
                         startDestination = "main",
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable("main") { Mainscreen() }
+                        composable("main") { MainScreen() }
                         composable("calendar") { CalendarScreen() }
+                        composable("Settings") { SettingsScreen() }
                     }
                 }
             }
-//            waterTheme {
-//                //Mainscreen()
-//                CalendarScreen()
-//            }
         }
     }
 }
 
+/*使用后可以关闭系统导航栏*/
 @Composable
 fun HideSystemBars() {
     val view = LocalView.current
@@ -97,37 +68,11 @@ fun HideSystemBars() {
     }
 }
 
-private fun scheduleResetTask(context: Context) {
-    val now = Calendar.getInstance()
-    val resetTime = Calendar.getInstance().apply {
-        timeZone = now.timeZone // 确保时区一致
-        set(Calendar.HOUR_OF_DAY, 16)
-        set(Calendar.MINUTE, 20)
-        set(Calendar.SECOND, 0)
-    }
-
-    val initialDelay = if (now.before(resetTime)) {
-        resetTime.timeInMillis - now.timeInMillis
-    } else {
-        resetTime.timeInMillis + TimeUnit.DAYS.toMillis(1) - now.timeInMillis
-    }
-    //Log.d("ResetCheckboxWorker_initialdelay","initialDelay:${initialDelay}")
-    val workRequest = PeriodicWorkRequestBuilder<ResetCheckboxWorker>(1, TimeUnit.DAYS)
-        .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
-        .build()
-
-    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-        "resetCheckboxTask",
-        ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, // 取消已有任务并重新排队
-        workRequest
-    )
-}
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true,showSystemUi = true)
 @Composable
 fun GreetingPreview() {
     waterTheme {
-        Mainscreen()
+        MainScreen()
     }
 }

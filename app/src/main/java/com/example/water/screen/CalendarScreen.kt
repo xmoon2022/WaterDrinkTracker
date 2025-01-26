@@ -1,9 +1,10 @@
 package com.example.water.screen
 
+import android.app.DatePickerDialog
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,22 +14,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,43 +35,115 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.water.ui.theme.waterTheme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.time.DateTimeException
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopYearMonthBar(currentDate: LocalDate) {
-    val formattedDate = currentDate.format(
-        DateTimeFormatter.ofPattern("yyyy年MM月")
-    )
-    // 3. 使用 Row 布局横向排列
+fun TopDateBar(
+    currentDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val context = LocalContext.current
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日")
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = formattedDate,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
-        )
+        // 上月按钮
+        TextButton(
+            onClick = {
+                val newDate = currentDate.minusMonths(1)
+                onDateSelected(newDate)
+            },
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Text("← 上月", fontSize = 14.sp)
+        }
+
+        // 日期+下拉按钮组合
+        Row(
+            modifier = Modifier
+                .clickable { showDatePicker(context, currentDate, onDateSelected) }
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = currentDate.format(dateFormatter),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "选择日期",
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        // 下月按钮
+        TextButton(
+            onClick = {
+                val newDate = currentDate.plusMonths(1)
+                onDateSelected(newDate)
+            },
+            modifier = Modifier.padding(end = 8.dp)
+        ) {
+            Text("下月 →", fontSize = 14.sp)
+        }
     }
+}
+
+// 月份选择对话框
+@RequiresApi(Build.VERSION_CODES.O)
+private fun showDatePicker(
+    context: Context,
+    initialDate: LocalDate,
+    onConfirm: (LocalDate) -> Unit
+) {
+    val calendar = Calendar.getInstance().apply {
+        set(initialDate.year, initialDate.monthValue - 1, initialDate.dayOfMonth)
+    }
+
+    DatePickerDialog(
+        context,
+        { _, year, month, day ->
+            // 处理无效日期（如 2月30日）
+            val adjustedDate = try {
+                LocalDate.of(year, month + 1, day)
+            } catch (e: DateTimeException) {
+                // 自动修正为当月最后一天
+                YearMonth.of(year, month + 1).atEndOfMonth()
+            }
+            onConfirm(adjustedDate)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    ).apply {
+        // 保持完整日期选择功能
+//        datePicker.minDate = LocalDate.now().minusYears(1).toEpochDay() // 可选：限制可选范围
+//        datePicker.maxDate = LocalDate.now().plusYears(100).toEpochDay()
+    }.show()
 }
 
 data class CalendarDate(
@@ -83,8 +152,8 @@ data class CalendarDate(
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun generateCalendarDates(currentDate: LocalDate): List<CalendarDate> {
-    val firstDayOfMonth = currentDate.withDayOfMonth(1)
+fun generateCalendarDates(baseDate: LocalDate): List<CalendarDate> {
+    val firstDayOfMonth = baseDate.withDayOfMonth(1)
     val startOfWeek = DayOfWeek.MONDAY // 假设周起始日为周日
     // 计算当月的第一天是周几的偏移量
     val dayOfWeek = firstDayOfMonth.dayOfWeek
@@ -96,7 +165,7 @@ fun generateCalendarDates(currentDate: LocalDate): List<CalendarDate> {
     }
 
     // 生成当前月的所有日期
-    val currentMonthDates = (1..currentDate.lengthOfMonth()).map { day ->
+    val currentMonthDates = (1..baseDate.lengthOfMonth()).map { day ->
         val date = firstDayOfMonth.withDayOfMonth(day)
         CalendarDate(date, true)
     }
@@ -146,19 +215,35 @@ fun WeekDaysRow() {
 // 更新 CalendarGrid 参数
 @Composable
 fun CalendarGrid(
-    currentDate: LocalDate,
+    baseDate: LocalDate,
     selectedDate: LocalDate?,
-    onDateClick: (LocalDate) -> Unit
+    onDateClick: (LocalDate) -> Unit,
+    sharedPreferences: SharedPreferences
 ) {
-    val calendarDates = remember(currentDate) { generateCalendarDates(currentDate) }
+    val calendarDates = remember(baseDate) {
+        generateCalendarDates(baseDate)
+    }
+
+    // 高亮有数据的日期
+    val markedDates = remember(baseDate) {
+        val historyJson = sharedPreferences.getString("daily_counts", "{}")
+        val historyType = object : TypeToken<Map<String, Int>>() {}.type
+        Gson().fromJson<Map<String, Int>>(historyJson, historyType)?.keys ?: emptySet()
+    }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         WeekDaysRow()
         LazyVerticalGrid(columns = GridCells.Fixed(7)) {
             items(calendarDates) { calendarDate ->
+                val isMarked = markedDates.contains(
+                    calendarDate.date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                )
+
                 CalendarDayCell(
                     calendarDate = calendarDate,
                     isSelected = calendarDate.date == selectedDate,
+                    isMarked = isMarked,
+                    isToday = calendarDate.date == LocalDate.now(),
                     onClick = {
                         if (calendarDate.isCurrentMonth) {
                             onDateClick(calendarDate.date)
@@ -176,17 +261,19 @@ fun CalendarGrid(
 fun CalendarDayCell(
     calendarDate: CalendarDate,
     isSelected: Boolean,
+    isMarked: Boolean,
+    isToday: Boolean,  // 新增参数
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
-//            .weight(1f)
             .aspectRatio(1f)
             .padding(4.dp)
             .clickable(
                 enabled = calendarDate.isCurrentMonth,
                 onClick = onClick
             )
+            // 背景色优先级：选中 > 当天 > 当前月
             .background(
                 color = when {
                     isSelected -> Color.Blue.copy(alpha = 0.3f)
@@ -195,52 +282,61 @@ fun CalendarDayCell(
                 },
                 shape = CircleShape
             )
+            // 边框优先级：选中 > 当天
             .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Color.Blue else Color.Transparent,
+                width = when {
+                    isSelected -> 2.dp
+                    else -> 0.dp
+                },
+                color = when {
+                    isSelected -> Color.Blue
+                    else -> Color.Transparent
+                },
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
     ) {
+        // 日期数字
         Text(
             text = calendarDate.date.dayOfMonth.toString(),
             color = when {
                 isSelected -> Color.Blue
+                isToday -> Color.Green  // 当天文字颜色
                 calendarDate.isCurrentMonth -> Color.Black
                 else -> Color.Gray
-            }
+            },
+            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
         )
+
+        // 数据标记点（显示在当天标识下方）
+        if (isMarked && !isSelected) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .size(6.dp)
+                    .background(Color.Blue, CircleShape)
+                    .padding(bottom = 4.dp)
+            )
+        }
     }
 }
 
-//@RequiresApi(Build.VERSION_CODES.O)
-//@Composable
-//fun CalendarDayCell(calendarDate: CalendarDate) {
-//    Box(
-//        modifier = Modifier
-//            .aspectRatio(1f) // 保持正方形
-//            .padding(4.dp)
-//            .background(
-//                color = if (calendarDate.isCurrentMonth) Color.LightGray.copy(alpha = 0.3f)
-//                else Color.Transparent,
-//                shape = CircleShape
-//            ),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        Text(
-//            text = calendarDate.date.dayOfMonth.toString(),
-//            color = if (calendarDate.isCurrentMonth) Color.Black else Color.Gray,
-//            fontSize = 16.sp
-//        )
-//    }
-//}
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun BottomWaterDataView(selectedDate: LocalDate?, cups: Int) {
-    val formattedDate = selectedDate?.format(
-        DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    ) ?: ""
+fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPreferences) {
+    // 从 SharedPreferences 获取喝水数据
+    val (cups, formattedDate) = remember(selectedDate) {
+        if (selectedDate != null) {
+            val dateStr = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            val historyJson = sharedPreferences.getString("daily_counts", "{}") ?: "{}"
+            val historyType = object : TypeToken<Map<String, Int>>() {}.type
+            val history = Gson().fromJson<Map<String, Int>>(historyJson, historyType) ?: emptyMap()
+            val cups = history[dateStr] ?: 0
+            Pair(cups, selectedDate.format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")))
+        } else {
+            Pair(0, "")
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -262,31 +358,43 @@ fun BottomWaterDataView(selectedDate: LocalDate?, cups: Int) {
 
                 // 喝水数据展示
                 if (cups > 0) {
-                    Text(
-                        text = "当日喝水杯数：",
-                        fontSize = 16.sp
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        repeat(cups) {
-                            Text("🥛", fontSize = 24.sp, modifier = Modifier.padding(2.dp))
-                        }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // 杯数文字
                         Text(
-                            text = "$cups 杯",
-                            color = Color.Blue,
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(start = 8.dp)
+                            text = buildAnnotatedString {
+                                append("今日完成喝水 ")
+                                withStyle(style = SpanStyle(color = Color.Blue)) {
+                                    append("$cups")
+                                }
+                                append(" 杯")
+                            },
+                            fontSize = 16.sp
                         )
+
+                        // 杯子表情展示
+                        Row(
+                            modifier = Modifier.padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            repeat(cups) {
+                                Text("🥛", fontSize = 24.sp)
+                            }
+                        }
                     }
                 } else {
                     Text(
-                        text = "当日未记录喝水",
+                        text = "当日没有喝水记录",
                         color = Color.Gray,
                         fontSize = 16.sp
                     )
                 }
             }
         } else {
-            Text("点击日期查看喝水记录", color = Color.Gray)
+            Text(
+                text = "点击日期查看喝水记录 →",
+                color = Color.Gray,
+                fontSize = 16.sp
+            )
         }
     }
 }
@@ -298,47 +406,37 @@ fun CalendarScreen() {
     val sharedPreferences = remember {
         context.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE)
     }
-    val currentDate = remember { LocalDate.now() }
+    // 使用完整日期作为主状态
+    var currentDate by remember { mutableStateOf(LocalDate.now()) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
-    // 获取选中日期的喝水杯数
-    val selectedCups = remember(selectedDate) {
-        selectedDate?.let { date ->
-            val dateKey = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
-            val historyJson = sharedPreferences.getString("daily_counts", "{}")
-            val historyType = object : TypeToken<Map<String, Int>>() {}.type
-            val history = Gson().fromJson<Map<String, Int>>(historyJson, historyType)
-            history?.get(dateKey) ?: 0 // 无记录返回0
-        } ?: 0
-    }
-
-//    Scaffold(
-//        bottomBar = {
-//            BottomBar()
-//        }
-//    ) { innerPadding ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize() // 让Box占据整个屏幕
-//                .padding(innerPadding) // 使用Scaffold提供的内边距
-//        ) {
-            Column {
-                TopYearMonthBar(currentDate)
-                CalendarGrid(
-                    currentDate = currentDate,
-                    selectedDate = selectedDate,
-                    onDateClick = { date -> selectedDate = date }
-                )
-                BottomWaterDataView(selectedDate, selectedCups)
+    Column {
+        TopDateBar(
+            currentDate = currentDate,
+            onDateSelected = { newDate ->
+                currentDate = newDate
+                selectedDate = null
             }
-        //}
-    //}
+        )
+
+        CalendarGrid(
+            baseDate = currentDate, // 改为基于具体日期生成网格
+            selectedDate = selectedDate,
+            onDateClick = { date -> selectedDate = date },
+            sharedPreferences = sharedPreferences
+        )
+
+        BottomWaterDataView(
+            selectedDate = selectedDate,
+            sharedPreferences = sharedPreferences
+        )
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true,showSystemUi = true)
 @Composable
-fun preview(){
+fun Preview(){
     waterTheme {
         CalendarScreen()
     }
