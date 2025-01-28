@@ -1,5 +1,6 @@
 package com.example.water.screen
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
@@ -16,6 +18,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
@@ -28,9 +31,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role.Companion.Switch
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -42,11 +47,13 @@ import com.example.water.ui.theme.waterTheme
 fun SettingItem(
     title: String,
     description: String? = null,
+    onClick: () -> Unit = {}, // 新增点击回调
     content: @Composable () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() } // 整个区域可点击
             .padding(16.dp),
         verticalAlignment = CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -54,7 +61,11 @@ fun SettingItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.titleMedium)
             description?.let {
-                Text(text = it, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
             }
         }
         content()
@@ -62,15 +73,35 @@ fun SettingItem(
 }
 
 @Composable
-fun DailyGoal(){
-    var dailyGoal by remember { mutableIntStateOf(8) }
+fun DailyGoal(
+    currentGoal: Int,
+    onGoalChanged: (Int) -> Unit
+) {
     SettingItem(title = "每日目标", description = "设置每日喝水杯数") {
         Row(verticalAlignment = CenterVertically) {
-            IconButton(onClick = { if (dailyGoal > 1) dailyGoal-- }) {
+            IconButton(
+                onClick = {
+                    if (currentGoal > 1) {
+                        onGoalChanged(currentGoal - 1)
+                    }
+                }
+            ) {
                 Icon(Icons.Default.KeyboardArrowDown, "减少")
             }
-            Text("$dailyGoal 杯", modifier = Modifier.padding(horizontal = 8.dp))
-            IconButton(onClick = { if (dailyGoal < 20) dailyGoal++ }) {
+
+            Text(
+                "$currentGoal 杯",
+                modifier = Modifier.padding(horizontal = 8.dp),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            IconButton(
+                onClick = {
+                    if (currentGoal < 20) {
+                        onGoalChanged(currentGoal + 1)
+                    }
+                }
+            ) {
                 Icon(Icons.Default.KeyboardArrowUp, "增加")
             }
         }
@@ -106,8 +137,8 @@ fun CupCapacity(){
                                 activeTrackColor = MaterialTheme.colorScheme.secondary,
                                 inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
                             ),
-                            valueRange = 100f..500f, // 设置容量范围（示例值）
-                            steps = 8 // 100-500分8步，每步50ml
+                            valueRange = 100f..1000f, // 设置容量范围（示例值）
+                            steps = 2
                         )
                         Text(
                             text = "当前容量：$tempCapacity ml",
@@ -141,6 +172,74 @@ fun CupCapacity(){
     }
 }
 
+enum class DisplayStyle {
+    WATER, CHECKLIST
+}
+
+private fun getStyleName(style: String): String {
+    return when(DisplayStyle.valueOf(style)) {
+        DisplayStyle.WATER -> "水球"
+        DisplayStyle.CHECKLIST -> "清单"
+    }
+}
+
+@Composable
+fun StyleSetting() {
+    val context = LocalContext.current
+    val sharedPreferences = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    val showDialog = remember { mutableStateOf(false) }
+    val currentStyle = remember {
+        sharedPreferences.getString("display_style", DisplayStyle.WATER.name) ?: DisplayStyle.WATER.name
+    }
+
+    SettingItem(
+        title = "显示样式",
+        description = "当前样式：${getStyleName(currentStyle)}",
+        onClick = { showDialog.value = true }
+    ) {
+        Icon(Icons.Default.ArrowDropDown, "展开")
+    }
+
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text("选择显示样式") },
+            text = {
+                Column {
+                    DisplayStyle.values().forEach { style ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    sharedPreferences.edit()
+                                        .putString("display_style", style.name)
+                                        .apply()
+                                    showDialog.value = false
+                                }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = style.name == currentStyle,
+                                onClick = null
+                            )
+                            Text(
+                                text = when (style) {
+                                    DisplayStyle.WATER -> "水球样式"
+                                    DisplayStyle.CHECKLIST -> "清单样式"
+                                },
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+}
+
+
 @Composable
 fun about(){
     SettingItem(title = "关于") {
@@ -158,9 +257,25 @@ fun about(){
 @Composable
 fun SettingsScreen(){
     Column {
-        DailyGoal()
+        val context = LocalContext.current
+        val sharedPreferences = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+        // 从 SharedPreferences 初始化目标
+        val (dailyGoal, setDailyGoal) = remember {
+            mutableStateOf(
+                sharedPreferences.getInt("daily_goal", 8) // 默认8杯
+            )
+        }
+        DailyGoal(
+            currentGoal = dailyGoal,
+            onGoalChanged = { newGoal ->
+                setDailyGoal(newGoal)
+                sharedPreferences.edit().putInt("daily_goal", newGoal).apply()
+            }
+        )
         HorizontalDivider(thickness = 2.dp)
-        CupCapacity()
+        StyleSetting()
+        HorizontalDivider(thickness = 2.dp)
+        //CupCapacity()
         HorizontalDivider(thickness = 2.dp)
         about()
     }

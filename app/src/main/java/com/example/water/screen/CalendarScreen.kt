@@ -404,7 +404,7 @@ fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPrefe
 fun CalendarScreen() {
     val context = LocalContext.current
     val sharedPreferences = remember {
-        context.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
     }
     // 使用完整日期作为主状态
     var currentDate by remember { mutableStateOf(LocalDate.now()) }
