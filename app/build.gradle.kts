@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.water"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -64,6 +64,9 @@ dependencies {
     implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.gson)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.glance)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.wear.tiles)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

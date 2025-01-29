@@ -206,7 +206,7 @@ fun StyleSetting() {
             title = { Text("选择显示样式") },
             text = {
                 Column {
-                    DisplayStyle.values().forEach { style ->
+                    DisplayStyle.entries.forEach { style ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -276,7 +276,7 @@ fun SettingsScreen(){
         StyleSetting()
         HorizontalDivider(thickness = 2.dp)
         //CupCapacity()
-        HorizontalDivider(thickness = 2.dp)
+        //HorizontalDivider(thickness = 2.dp)
         about()
     }
 }

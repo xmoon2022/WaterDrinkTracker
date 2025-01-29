@@ -327,10 +327,8 @@ fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPrefe
     // 从 SharedPreferences 获取喝水数据
     val (cups, formattedDate) = remember(selectedDate) {
         if (selectedDate != null) {
-            val dateStr = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
-            val historyJson = sharedPreferences.getString("daily_counts", "{}") ?: "{}"
-            val historyType = object : TypeToken<Map<String, Int>>() {}.type
-            val history = Gson().fromJson<Map<String, Int>>(historyJson, historyType) ?: emptyMap()
+            val dateStr = selectedDate.toString() // 直接使用 ISO 格式
+            val history = loadHistory(sharedPreferences)
             val cups = history[dateStr] ?: 0
             Pair(cups, selectedDate.format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")))
         } else {

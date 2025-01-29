@@ -3,29 +3,20 @@ package com.example.water.screen
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -33,7 +24,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,12 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,10 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.water.R
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import java.time.LocalDate
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CheckList(
     target: Int, // 新增目标杯数参数
@@ -137,7 +123,7 @@ fun CheckList(
 
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Center
     ) {
         Column(modifier = modifier) {
             // 根据目标数量动态生成复选框
@@ -199,7 +185,6 @@ fun CheckList(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InteractiveWaterCard(target: Int) {
     val context = LocalContext.current
@@ -215,39 +200,33 @@ fun InteractiveWaterCard(target: Int) {
     // 每日自动重置逻辑
     // 修改后的每日重置逻辑
     LaunchedEffect(Unit) {
-        val today = LocalDate.now().toString()
-        val lastSavedDate = sharedPreferences.getString("last_saved_date", null)
+        // 迁移旧格式数据到 JSON
+        val allEntries = sharedPreferences.all
+        val history = loadHistory(sharedPreferences).toMutableMap()
 
-        if (lastSavedDate != null && lastSavedDate != today) {
-            // 正确方式：创建新 Map 并更新
-            val history = loadHistory(sharedPreferences).toMutableMap()
-            history[lastSavedDate] = current
-            saveHistory(sharedPreferences, history)
-
-            // 重置当天数据
-            current = 0
-            sharedPreferences.edit()
-                .putString("last_saved_date", today)
-                .apply()
-        } else if (lastSavedDate == null) {
-            sharedPreferences.edit().putString("last_saved_date", today).apply()
+        allEntries.forEach { (key, value) ->
+            if (key.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) { // 匹配日期格式的键
+                history[key] = (value as? Int) ?: 0
+                sharedPreferences.edit().remove(key).apply() // 删除旧键
+            }
         }
+
+        saveHistory(sharedPreferences, history)
     }
 
     // 实时保存到 daily_counts
-    DisposableEffect(current) {
-        onDispose {
-            val history = loadHistory(sharedPreferences).toMutableMap()
-            history[LocalDate.now().toString()] = current
-            saveHistory(sharedPreferences, history)
-        }
+    LaunchedEffect(current) {
+        val todayKey = LocalDate.now().toString()
+        val history = loadHistory(sharedPreferences).toMutableMap()
+        history[todayKey] = current
+        saveHistory(sharedPreferences, history)
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Center
     ) {
         Card(
             modifier = Modifier
@@ -269,7 +248,7 @@ fun InteractiveWaterCard(target: Int) {
                 Spacer(Modifier.height(16.dp))
                 ControlButtons(current, target, onValueChange = { newValue ->
                     current = newValue
-                    sharedPreferences.edit().putInt(getTodayKey(), newValue).apply()
+                    //sharedPreferences.edit().putInt(getTodayKey(), newValue).apply()
                 })
             }
         }
@@ -302,17 +281,17 @@ private fun ControlButtons(
 }
 
 // 辅助函数：获取当日记录
-@RequiresApi(Build.VERSION_CODES.O)
 private fun getTodayCount(prefs: SharedPreferences): Int {
-    return loadHistory(prefs)[LocalDate.now().toString()] ?: 0
+    val history = loadHistory(prefs)
+    return history[LocalDate.now().toString()] ?: 0 // 仅从 JSON 读取
 }
 
-// 辅助函数：加载历史记录
-private fun loadHistory(prefs: SharedPreferences): MutableMap<String, Int> {
+// 辅助函数：加载历史记录（增强健壮性）
+fun loadHistory(prefs: SharedPreferences): MutableMap<String, Int> {
     return try {
         val json = prefs.getString("daily_counts", "{}") ?: "{}"
-        Gson().fromJson(json, object : TypeToken<MutableMap<String, Int>>() {}.type)
-            ?: mutableMapOf()
+        val type = object : TypeToken<MutableMap<String, Int>>() {}.type
+        Gson().fromJson(json, type) ?: mutableMapOf()
     } catch (e: Exception) {
         mutableMapOf()
     }
@@ -325,7 +304,6 @@ private fun saveHistory(prefs: SharedPreferences, history: Map<String, Int>) {
         .apply()
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun getTodayKey(): String {
     return LocalDate.now().toString()
 }
@@ -361,7 +339,6 @@ fun WaterProgress(current: Int, target: Int) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
@@ -396,7 +373,6 @@ fun MainScreen() {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 @Preview(showBackground = true,showSystemUi = true)
 fun home(){
