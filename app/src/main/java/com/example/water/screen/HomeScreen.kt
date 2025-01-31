@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,78 +48,28 @@ import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import java.time.LocalDate
+import com.example.water.utils.DateUtils
+import com.example.water.utils.getTodayCount
+import com.example.water.utils.saveTodayCount
 
 @Composable
 fun CheckList(
-    target: Int, // 新增目标杯数参数
+    target: Int,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val sharedPreferences = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    var current by remember { mutableIntStateOf(prefs.getTodayCount().coerceIn(0, target)) }
 
-    // 用 target 作为 remember 的 key，确保目标改变时重新初始化
-    var checkboxStates by remember(target) {
-        mutableStateOf(
-            sharedPreferences.getString("checkbox_states", null)
-                ?.split(",")
-                ?.map { it.toBoolean() }
-                ?.let { savedList ->
-                    // 处理存储状态与当前目标长度不一致的情况
-                    if (savedList.size == target) savedList
-                    else List(target) { index -> savedList.getOrElse(index) { false } }
-                } ?: List(target) { false }
-        )
-    }
-
-    // 处理日期变更和自动保存（添加 target 到 LaunchedEffect 依赖）
+    // 统一日期检查
     LaunchedEffect(Unit) {
-        val today = LocalDate.now().toString()
-        val lastSavedDate = sharedPreferences.getString("last_saved_date", null)
-
-        if (lastSavedDate != null && lastSavedDate != today) {
-            // 读取存储的原始状态（可能包含历史长度）
-            val previousStates = sharedPreferences.getString("checkbox_states", null)
-                ?.split(",")
-                ?.map { it.toBoolean() } ?: List(target) { false }
-
-            // 统计实际选中数量（无论原始长度）
-            val previousCount = previousStates.count { it }
-
-            // 更新历史记录
-            val historyJson = sharedPreferences.getString("daily_counts", "{}")
-            val historyType = object : TypeToken<MutableMap<String, Int>>() {}.type
-            val history = Gson().fromJson<MutableMap<String, Int>>(historyJson, historyType) ?: mutableMapOf()
-            history[lastSavedDate] = previousCount
-
-            // 根据当前目标重置状态
-            val resetStates = List(target) { false }
-            with(sharedPreferences.edit()) {
-                putString("daily_counts", Gson().toJson(history))
-                putString("checkbox_states", resetStates.joinToString(","))
-                putString("last_saved_date", today)
-                apply()
-            }
-            checkboxStates = resetStates
-        } else if (lastSavedDate == null) {
-            sharedPreferences.edit().putString("last_saved_date", today).apply()
-        }
+        DateUtils.checkDailyReset(prefs)
+        current = prefs.getTodayCount().coerceIn(0, target)
     }
 
-    // 监听状态变化（保持原有逻辑）
-    DisposableEffect(sharedPreferences) {
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == "checkbox_states") {
-                checkboxStates = sharedPreferences.getString("checkbox_states", null)
-                    ?.split(",")
-                    ?.map { it.toBoolean() }
-                    ?.let { savedList ->
-                        if (savedList.size == target) savedList
-                        else List(target) { index -> savedList.getOrElse(index) { false } }
-                    } ?: List(target) { false }
-            }
-        }
-        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
-        onDispose { sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener) }
+    // 状态同步
+    LaunchedEffect(current) {
+        prefs.saveTodayCount(current)
     }
 
     Box(
@@ -126,100 +77,75 @@ fun CheckList(
         contentAlignment = Center
     ) {
         Column(modifier = modifier) {
-            // 根据目标数量动态生成复选框
-            for (i in 0 until target) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Checkbox(
-                        checked = checkboxStates[i],
-                        onCheckedChange = {
-                            val newStates = checkboxStates.toMutableList().apply { this[i] = it }
-                            checkboxStates = newStates
-                            sharedPreferences.edit()
-                                .putString("checkbox_states", newStates.joinToString(","))
-                                .apply()
-
-                            val today = LocalDate.now().toString()
-                            val count = newStates.count { it }
-                            val historyJson = sharedPreferences.getString("daily_counts", "{}")
-                            val historyType = object : TypeToken<MutableMap<String, Int>>() {}.type
-                            val history = Gson().fromJson<MutableMap<String, Int>>(historyJson, historyType)
-                                ?: mutableMapOf()
-                            history[today] = count
-
-                            sharedPreferences.edit()
-                                .putString("daily_counts", Gson().toJson(history))
-                                .apply()
-                        }
-                    )
-                    Text("第${i + 1}杯")
-                }
+            // 根据目标数量生成复选框
+            (0 until target).forEach { index ->
+                CheckBoxRow(
+                    index = index,
+                    current = current,
+                    target = target,
+                    onCheckedChange = { newState ->
+                        current = when {
+                            newState && index >= current -> index + 1
+                            !newState && index < current -> index
+                            else -> current
+                        }.coerceIn(0, target)
+                    }
+                )
             }
 
             Spacer(Modifier.height(16.dp))
-            FilledTonalButton(
-                onClick = {
-                    val resetStates = List(target) { false }
-                    checkboxStates = resetStates
-                    sharedPreferences.edit()
-                        .putString("checkbox_states", resetStates.joinToString(","))
-                        .apply()
-
-                    val today = LocalDate.now().toString()
-                    val historyJson = sharedPreferences.getString("daily_counts", "{}")
-                    val historyType = object : TypeToken<MutableMap<String, Int>>() {}.type
-                    val history = Gson().fromJson<MutableMap<String, Int>>(historyJson, historyType)
-                        ?: mutableMapOf()
-                    history[today] = 0
-
-                    sharedPreferences.edit()
-                        .putString("daily_counts", Gson().toJson(history))
-                        .apply()
-                }
-            ) {
-                Text("重置", fontSize = 16.sp)
-            }
+            ResetButton(target) { current = 0 }
         }
+    }
+}
+
+@Composable
+private fun CheckBoxRow(
+    index: Int,
+    current: Int,
+    target: Int,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        Checkbox(
+            checked = index < current,
+            onCheckedChange = { checked ->
+                // 只允许两种操作：
+                // 1. 勾选下一个未勾选的
+                // 2. 取消最后一个已勾选的
+                if ((checked && index == current) || (!checked && index == current - 1)) {
+                    onCheckedChange(checked)
+                }
+            },
+            enabled = index <= current  // 禁用后面的复选框
+        )
+        Text("第${index + 1}杯")
+    }
+}
+
+@Composable
+private fun ResetButton(target: Int, onClick: () -> Unit) {
+    FilledTonalButton(onClick = onClick) {
+        Text("重置", fontSize = 16.sp)
     }
 }
 
 @Composable
 fun InteractiveWaterCard(target: Int) {
     val context = LocalContext.current
-    val sharedPreferences = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    var current by remember { mutableIntStateOf(prefs.getTodayCount().coerceAtMost(target)) }
 
-    // 从 daily_counts 初始化状态
-    var current by remember {
-        mutableStateOf(
-            getTodayCount(sharedPreferences).coerceAtMost(target)
-        )
-    }
-
-    // 每日自动重置逻辑
-    // 修改后的每日重置逻辑
     LaunchedEffect(Unit) {
-        // 迁移旧格式数据到 JSON
-        val allEntries = sharedPreferences.all
-        val history = loadHistory(sharedPreferences).toMutableMap()
-
-        allEntries.forEach { (key, value) ->
-            if (key.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) { // 匹配日期格式的键
-                history[key] = (value as? Int) ?: 0
-                sharedPreferences.edit().remove(key).apply() // 删除旧键
-            }
-        }
-
-        saveHistory(sharedPreferences, history)
+        DateUtils.checkDailyReset(prefs)
+        current = prefs.getTodayCount().coerceAtMost(target)
     }
 
-    // 实时保存到 daily_counts
     LaunchedEffect(current) {
-        val todayKey = LocalDate.now().toString()
-        val history = loadHistory(sharedPreferences).toMutableMap()
-        history[todayKey] = current
-        saveHistory(sharedPreferences, history)
+        prefs.saveTodayCount(current)
     }
 
     Box(
@@ -248,7 +174,6 @@ fun InteractiveWaterCard(target: Int) {
                 Spacer(Modifier.height(16.dp))
                 ControlButtons(current, target, onValueChange = { newValue ->
                     current = newValue
-                    //sharedPreferences.edit().putInt(getTodayKey(), newValue).apply()
                 })
             }
         }
@@ -278,34 +203,6 @@ private fun ControlButtons(
             Icon(Icons.Default.KeyboardArrowUp, "Increase")
         }
     }
-}
-
-// 辅助函数：获取当日记录
-private fun getTodayCount(prefs: SharedPreferences): Int {
-    val history = loadHistory(prefs)
-    return history[LocalDate.now().toString()] ?: 0 // 仅从 JSON 读取
-}
-
-// 辅助函数：加载历史记录（增强健壮性）
-fun loadHistory(prefs: SharedPreferences): MutableMap<String, Int> {
-    return try {
-        val json = prefs.getString("daily_counts", "{}") ?: "{}"
-        val type = object : TypeToken<MutableMap<String, Int>>() {}.type
-        Gson().fromJson(json, type) ?: mutableMapOf()
-    } catch (e: Exception) {
-        mutableMapOf()
-    }
-}
-
-// 辅助函数：保存历史记录
-private fun saveHistory(prefs: SharedPreferences, history: Map<String, Int>) {
-    prefs.edit()
-        .putString("daily_counts", Gson().toJson(history))
-        .apply()
-}
-
-private fun getTodayKey(): String {
-    return LocalDate.now().toString()
 }
 
 @Composable

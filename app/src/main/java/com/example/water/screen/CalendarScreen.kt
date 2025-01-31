@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.water.ui.theme.waterTheme
+import com.example.water.utils.loadHistory
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.time.DateTimeException
@@ -328,7 +329,7 @@ fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPrefe
     val (cups, formattedDate) = remember(selectedDate) {
         if (selectedDate != null) {
             val dateStr = selectedDate.toString() // 直接使用 ISO 格式
-            val history = loadHistory(sharedPreferences)
+            val history = sharedPreferences.loadHistory()
             val cups = history[dateStr] ?: 0
             Pair(cups, selectedDate.format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")))
         } else {
