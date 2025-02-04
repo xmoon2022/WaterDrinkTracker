@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -40,6 +41,7 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.size
+import androidx.glance.layout.width
 import androidx.glance.layout.wrapContentSize
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -87,7 +89,7 @@ class GlanceWidget : GlanceAppWidget() {
     private fun MyContent(count: Int) {
         Column(
             modifier = GlanceModifier.fillMaxSize()
-                .background(GlanceTheme.colors.background),
+                .background(Color.White),
             verticalAlignment = Alignment.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -97,20 +99,34 @@ class GlanceWidget : GlanceAppWidget() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                CircleIconButton(
-                    imageProvider = ImageProvider(R.drawable.ic_add),
-                    contentDescription = "增加",
-                    backgroundColor = GlanceTheme.colors.surfaceVariant,
-                    contentColor = GlanceTheme.colors.onSurfaceVariant,
-                    onClick = actionRunCallback<IncrementAction>()
+//                CircleIconButton(
+//                    imageProvider = ImageProvider(R.drawable.ic_add),
+//                    contentDescription = "增加",
+//                    backgroundColor = GlanceTheme.colors.surfaceVariant,
+//                    contentColor = GlanceTheme.colors.onSurfaceVariant,
+//                    onClick = actionRunCallback<IncrementAction>()
+//                )
+
+//                CircleIconButton(
+//                    imageProvider = ImageProvider(R.drawable.ic_remove),
+//                    contentDescription = "减少",
+//                    backgroundColor = GlanceTheme.colors.surfaceVariant,
+//                    contentColor = GlanceTheme.colors.onSurfaceVariant,
+//                    onClick = actionRunCallback<DecrementAction>()
+//                )
+                //CircleIconButton在xiaomi上不兼容
+                Button(
+                    text = "+",
+                    onClick = actionRunCallback<IncrementAction>(),
+                    modifier = GlanceModifier.background(Color.LightGray)
                 )
-                Spacer()
-                CircleIconButton(
-                    imageProvider = ImageProvider(R.drawable.ic_remove),
-                    contentDescription = "减少",
-                    backgroundColor = GlanceTheme.colors.surfaceVariant,
-                    contentColor = GlanceTheme.colors.onSurfaceVariant,
-                    onClick = actionRunCallback<DecrementAction>()
+                Spacer(
+                    modifier = GlanceModifier.width(8.dp)
+                )
+                Button(
+                    text = "-",
+                    onClick = actionRunCallback<DecrementAction>(),
+                    modifier = GlanceModifier.background(Color.LightGray)
                 )
             }
         }
