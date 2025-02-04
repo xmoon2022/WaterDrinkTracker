@@ -1,10 +1,7 @@
-package com.example.water.screen
+package com.example.water.ui.screen
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
-import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,11 +40,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.appwidget.updateAll
 import com.example.water.R
-import com.google.gson.Gson
-import com.google.gson.JsonParser
-import com.google.gson.reflect.TypeToken
-import java.time.LocalDate
+import com.example.water.ui.widget.GlanceWidget
 import com.example.water.utils.DateUtils
 import com.example.water.utils.getTodayCount
 import com.example.water.utils.saveTodayCount
@@ -61,6 +56,22 @@ fun CheckList(
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     var current by remember { mutableIntStateOf(prefs.getTodayCount().coerceIn(0, target)) }
 
+    // 监听SharedPreferences的变化
+    val listener = remember {
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "daily_counts") {
+                current = prefs.getTodayCount().coerceAtMost(target)
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+
     // 统一日期检查
     LaunchedEffect(Unit) {
         DateUtils.checkDailyReset(prefs)
@@ -70,6 +81,7 @@ fun CheckList(
     // 状态同步
     LaunchedEffect(current) {
         prefs.saveTodayCount(current)
+        GlanceWidget().updateAll(context)
     }
 
     Box(
@@ -139,6 +151,22 @@ fun InteractiveWaterCard(target: Int) {
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     var current by remember { mutableIntStateOf(prefs.getTodayCount().coerceAtMost(target)) }
 
+    // 监听SharedPreferences的变化
+    val listener = remember {
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "daily_counts") {
+                current = prefs.getTodayCount().coerceAtMost(target)
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+
     LaunchedEffect(Unit) {
         DateUtils.checkDailyReset(prefs)
         current = prefs.getTodayCount().coerceAtMost(target)
@@ -146,6 +174,7 @@ fun InteractiveWaterCard(target: Int) {
 
     LaunchedEffect(current) {
         prefs.saveTodayCount(current)
+        GlanceWidget().updateAll(context)
     }
 
     Box(
@@ -267,12 +296,4 @@ fun MainScreen() {
         DisplayStyle.WATER -> InteractiveWaterCard(dailyGoal)
         DisplayStyle.CHECKLIST -> CheckList(dailyGoal)
     }
-}
-
-
-@Composable
-@Preview(showBackground = true,showSystemUi = true)
-fun home(){
-    //CircularWaterTracker(current = 1, target = 8)
-    InteractiveWaterCard(8)
 }

@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.water"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -23,6 +24,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!--glance微件-->
+        <receiver android:name=".ui.widget.GlanceWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.water.ui.widget.actions.IncrementAction" />
+                <action android:name="com.example.water.ui.widget.actions.DecrementAction" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glance_widget_info" />
+        </receiver>
     </application>
 
 </manifest>

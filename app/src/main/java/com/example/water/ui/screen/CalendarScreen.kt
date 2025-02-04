@@ -1,4 +1,4 @@
-package com.example.water.screen
+package com.example.water.ui.screen
 
 import android.app.DatePickerDialog
 import android.content.Context

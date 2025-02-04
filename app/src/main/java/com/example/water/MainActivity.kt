@@ -1,5 +1,7 @@
 package com.example.water
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,11 +15,12 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.water.screen.BottomBar
-import com.example.water.screen.CalendarScreen
-import com.example.water.screen.MainScreen
-import com.example.water.screen.SettingsScreen
+import com.example.water.ui.screen.BottomBar
+import com.example.water.ui.screen.CalendarScreen
+import com.example.water.ui.screen.MainScreen
+import com.example.water.ui.screen.SettingsScreen
 import com.example.water.ui.theme.waterTheme
+import com.example.water.utils.getTodayCount
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
