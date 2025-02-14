@@ -1,10 +1,8 @@
-package com.example.water.ui.screen
+package com.example.water.ui.screen.calendar
 
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -55,7 +53,6 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TopDateBar(
     currentDate: LocalDate,
@@ -115,7 +112,6 @@ fun TopDateBar(
 }
 
 // 月份选择对话框
-@RequiresApi(Build.VERSION_CODES.O)
 private fun showDatePicker(
     context: Context,
     initialDate: LocalDate,
@@ -152,7 +148,6 @@ data class CalendarDate(
     val isCurrentMonth: Boolean // 是否属于当前月
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun generateCalendarDates(baseDate: LocalDate): List<CalendarDate> {
     val firstDayOfMonth = baseDate.withDayOfMonth(1)
     val startOfWeek = DayOfWeek.MONDAY // 假设周起始日为周日
@@ -212,7 +207,6 @@ fun WeekDaysRow() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 // 更新 CalendarGrid 参数
 @Composable
 fun CalendarGrid(
@@ -257,7 +251,6 @@ fun CalendarGrid(
 }
 
 // 更新 CalendarDayCell
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarDayCell(
     calendarDate: CalendarDate,
@@ -322,7 +315,6 @@ fun CalendarDayCell(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPreferences) {
     // 从 SharedPreferences 获取喝水数据
@@ -398,7 +390,6 @@ fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPrefe
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarScreen() {
     val context = LocalContext.current
@@ -432,7 +423,6 @@ fun CalendarScreen() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true,showSystemUi = true)
 @Composable
 fun Preview(){

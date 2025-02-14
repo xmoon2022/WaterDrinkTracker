@@ -1,4 +1,4 @@
-package com.example.water.ui.screen
+package com.example.water.ui.screen.home
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -37,12 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.appwidget.updateAll
 import com.example.water.R
-import com.example.water.ui.widget.GlanceWidget
+import com.example.water.ui.screen.settings.items.DisplayStyle
+import com.example.water.widget.GlanceWidget
 import com.example.water.utils.DateUtils
 import com.example.water.utils.getTodayCount
 import com.example.water.utils.saveTodayCount

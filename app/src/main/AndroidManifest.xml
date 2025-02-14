@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
         <!--glance微件-->
-        <receiver android:name=".ui.widget.GlanceWidgetReceiver"
+        <receiver android:name=".widget.GlanceWidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

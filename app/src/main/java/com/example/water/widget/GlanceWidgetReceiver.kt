@@ -1,4 +1,4 @@
-package com.example.water.ui.widget
+package com.example.water.widget
 
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver

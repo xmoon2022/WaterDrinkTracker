@@ -1,7 +1,5 @@
 package com.example.water
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,11 +14,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.water.ui.screen.BottomBar
-import com.example.water.ui.screen.CalendarScreen
-import com.example.water.ui.screen.MainScreen
-import com.example.water.ui.screen.SettingsScreen
+import com.example.water.ui.screen.calendar.CalendarScreen
+import com.example.water.ui.screen.home.MainScreen
+import com.example.water.ui.screen.settings.SettingsScreen
 import com.example.water.ui.theme.waterTheme
-import com.example.water.utils.getTodayCount
+import com.example.water.navigation.MainNavigation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,40 +27,12 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             //HideSystemBars()
-            val navController = rememberNavController()
             waterTheme {
-                Scaffold(
-                    bottomBar = { BottomBar(navController = navController) }
-                ) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = "main",
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        composable("main") { MainScreen() }
-                        composable("calendar") { CalendarScreen() }
-                        composable("Settings") { SettingsScreen() }
-                    }
-                }
+                MainNavigation()
             }
         }
     }
 }
-
-/*使用后可以关闭系统导航栏*/
-//@Composable
-//fun HideSystemBars() {
-//    val view = LocalView.current
-//    val window = (view.context as ComponentActivity).window
-//    // 使用 LaunchedEffect 确保系统栏在 UI 加载完成后隐藏
-//    LaunchedEffect(Unit) {
-//        WindowInsetsControllerCompat(window, view).apply {
-//            hide(WindowInsetsCompat.Type.systemBars()) // 隐藏导航栏和状态栏
-//            systemBarsBehavior =
-//                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE // 设置手势行为
-//        }
-//    }
-//}
 
 @Preview(showBackground = true,showSystemUi = true)
 @Composable
