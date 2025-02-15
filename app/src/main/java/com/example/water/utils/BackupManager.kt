@@ -1,8 +1,6 @@
 package com.example.water.utils
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -18,13 +16,7 @@ import androidx.work.WorkerParameters
 import com.example.water.utils.BackupManager.createBackup
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.BufferedWriter
 import java.io.IOException
-import java.io.OutputStreamWriter
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.util.Date
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 object BackupManager {
@@ -134,36 +126,6 @@ object BackupManager {
         }
     }
 
-    // 私有工具方法
-    private fun getBackupUri(context: Context): Uri {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-            .getString("backup_location_uri", null)?.let { Uri.parse(it) }
-            ?: throw IllegalStateException("未设置备份位置")
-    }
-
-    // 用户首次设置备份位置
-    fun requestBackupLocation(activity: Activity, requestCode: Int) {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-        }
-        activity.startActivityForResult(intent, requestCode)
-    }
-
-    // 在onActivityResult中调用
-    fun handleLocationResult(context: Context, uri: Uri?) {
-        uri?.let {
-            context.contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putString("backup_location_uri", it.toString())
-                .apply()
-        }
-    }
 }
 
 // 自动备份Worker
@@ -179,30 +141,6 @@ class AutoBackupWorker(appContext: Context, params: WorkerParameters) :
             if (success) Result.success() else Result.retry()
         } catch (e: Exception) {
             Result.failure()
-        }
-    }
-
-    companion object {
-        fun schedule(context: Context, enable: Boolean) {
-            val workManager = WorkManager.getInstance(context)
-
-            if (enable) {
-                val request = PeriodicWorkRequestBuilder<AutoBackupWorker>(
-                    1, TimeUnit.DAYS
-                ).setConstraints(
-                    Constraints.Builder()
-                        .setRequiresBatteryNotLow(true)
-                        .build()
-                ).build()
-
-                workManager.enqueueUniquePeriodicWork(
-                    "auto_backup",
-                    ExistingPeriodicWorkPolicy.UPDATE,
-                    request
-                )
-            } else {
-                workManager.cancelUniqueWork("auto_backup")
-            }
         }
     }
 }

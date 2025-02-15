@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.water.ui.screen.BottomBar
 import com.example.water.ui.screen.calendar.CalendarScreen
 import com.example.water.ui.screen.home.MainScreen
 import com.example.water.ui.screen.settings.SettingsScreen

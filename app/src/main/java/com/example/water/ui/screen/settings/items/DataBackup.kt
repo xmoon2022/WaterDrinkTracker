@@ -1,5 +1,6 @@
 package com.example.water.ui.screen.settings.items
 
+import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,7 +37,10 @@ import com.example.water.utils.BackupManager
 fun DataBackup(){
     val context = LocalContext.current
     val showList = remember { mutableStateOf(false) }
-    var autoBack = remember { mutableStateOf(false) }
+    val sharedPreferences = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    val autoBack = remember {
+        mutableStateOf(sharedPreferences.getBoolean("auto_back", false))
+    }
     // 备份相关状态控制
     val backupDirLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -59,7 +63,6 @@ fun DataBackup(){
             autoBack.value = false
         }
     }
-
 
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
@@ -120,34 +123,52 @@ fun DataBackup(){
                     ) {
                         Text("导入数据")
                     }
-                    // 自动备份开关
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    // 自动备份按钮
+                    TextButton(
+                        onClick = {
+                            if (BackupManager.hasBackupLocation(context)) {
+                                // 已有备份目录直接启用
+                                autoBack.value = !autoBack.value
+                                sharedPreferences.edit().putBoolean("auto_back", autoBack.value).apply()
+                                Toast.makeText(context, if (autoBack.value) "开启自动备份" else "关闭自动备份", Toast.LENGTH_SHORT).show()
+                            } else {
+                                // 触发目录选择对话框
+                                backupDirLauncher.launch(null)
+                            }
+                        }
                     ) {
                         Text("自动备份")
-                        Switch(
-                            checked = autoBack.value,
-                            onCheckedChange = { enabled ->
-                                if (enabled) {
-                                    if (BackupManager.hasBackupLocation(context)) {
-                                        // 已有备份目录直接启用
-                                        BackupManager.setupAutoBackup(context, true)
-                                        autoBack.value = true
-                                    } else {
-                                        // 触发目录选择对话框
-                                        backupDirLauncher.launch(null)
-                                    }
-                                } else {
-                                    // 关闭自动备份
-                                    BackupManager.setupAutoBackup(context, false)
-                                    autoBack.value = false
-                                }
-                            }
-                        )
                     }
+                    // 自动备份开关
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(12.dp),
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Text("自动备份")
+//                        Switch(
+//                            checked = autoBack.value,
+//                            onCheckedChange = { enabled ->
+//                                if (enabled) {
+//                                    if (BackupManager.hasBackupLocation(context)) {
+//                                        // 已有备份目录直接启用
+//                                        BackupManager.setupAutoBackup(context, true)
+//                                        autoBack.value = true
+//                                        sharedPreferences.edit().putBoolean("auto_back", true).apply()
+//                                    } else {
+//                                        // 触发目录选择对话框
+//                                        backupDirLauncher.launch(null)
+//                                    }
+//                                } else {
+//                                    // 关闭自动备份
+//                                    BackupManager.setupAutoBackup(context, false)
+//                                    autoBack.value = false
+//                                    sharedPreferences.edit().putBoolean("auto_back", false).apply()
+//                                }
+//                            }
+//                        )
+//                    }
                 }
             },
             confirmButton = {

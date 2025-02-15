@@ -1,4 +1,4 @@
-package com.example.water.ui.screen
+package com.example.water.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
