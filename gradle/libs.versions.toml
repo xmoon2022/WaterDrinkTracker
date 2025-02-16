@@ -1,5 +1,8 @@
 [versions]
 agp = "8.8.0"
+converterGson = "2.11.0"
+githubSardineAndroid = "<0.8>"
+githubSardineAndroidVersion = "0.9"
 glanceAppwidget = "1.1.1"
 glanceWearTiles = "1.0.0-alpha05"
 gson = "2.10.1"
@@ -12,6 +15,11 @@ lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
 composeBom = "2024.04.01"
 navigationCompose = "2.8.5"
+okhttp = "4.9.0"
+retrofit = "2.11.0"
+sardine = "5.13"
+sardineAndroid = "0.8"
+sardineAndroidVersion = "0.8"
 workRuntimeKtx = "2.10.0"
 runtimeAndroid = "1.7.6"
 toolsCore = "1.0.0-alpha10"
@@ -24,6 +32,7 @@ androidx-glance = { module = "androidx.glance:glance", version.ref = "glanceAppw
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glanceAppwidget" }
 androidx-glance-wear-tiles = { module = "androidx.glance:glance-wear-tiles", version.ref = "glanceWearTiles" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -43,6 +52,13 @@ androidx-runtime-android = { group = "androidx.compose.runtime", name = "runtime
 androidx-tools-core = { group = "androidx.privacysandbox.tools", name = "tools-core", version.ref = "toolsCore" }
 firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "preferenceKtx" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+sardine = { module = "com.github.lookfirst:sardine", version.ref = "sardine" }
+sardine-android = { module = "com.github.thegrizzlylabs:sardine-android", version.ref = "sardineAndroid" }
+sardine-android-v08 = { module = "com.github.thegrizzlylabs:sardine-android", version.ref = "githubSardineAndroid" }
+sardine-android-v09 = { module = "com.github.thegrizzlylabs:sardine-android", version.ref = "githubSardineAndroidVersion" }
+thegrizzlylabs-sardine-android = { module = "com.thegrizzlylabs.sardine-android:sardine-android", version.ref = "sardineAndroidVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
