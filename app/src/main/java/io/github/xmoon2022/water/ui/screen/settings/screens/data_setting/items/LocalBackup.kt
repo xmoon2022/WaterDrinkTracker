@@ -1,4 +1,4 @@
-package io.github.xmoon2022.water.ui.screen.settings.items
+package io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items
 
 import android.content.Context
 import android.content.Intent
@@ -30,7 +30,7 @@ import io.github.xmoon2022.water.ui.screen.settings.SettingItem
 import io.github.xmoon2022.water.utils.BackupManager
 
 @Composable
-fun DataBackup(){
+fun LocalBackup(){
     val context = LocalContext.current
     val showList = remember { mutableStateOf(false) }
     val sharedPreferences = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }

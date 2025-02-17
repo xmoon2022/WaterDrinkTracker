@@ -12,8 +12,10 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults.containerColor
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -35,6 +37,8 @@ fun BottomBar(navController: NavController) {
 
     BottomAppBar(
         modifier = Modifier.height(bottomBarHeight),
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.primary,
         contentPadding = PaddingValues(0.dp) // 移除默认内边距
     ) {
         Row(
@@ -61,7 +65,7 @@ fun BottomBar(navController: NavController) {
                         imageVector = icon,
                         contentDescription = desc,
                         modifier = Modifier.size(iconSize),
-                        tint = if (currentRoute == route) Color.Blue else Color.Gray
+                        tint = if (currentRoute == route) MaterialTheme.colorScheme.onPrimaryContainer  else MaterialTheme.colorScheme.outlineVariant
                     )
                 }
             }

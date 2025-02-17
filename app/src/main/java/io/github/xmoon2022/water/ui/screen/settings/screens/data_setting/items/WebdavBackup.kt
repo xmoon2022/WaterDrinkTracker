@@ -1,4 +1,4 @@
-package io.github.xmoon2022.water.ui.screen.settings.items
+package io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,16 +21,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import androidx.glance.appwidget.ImageProvider
 import io.github.xmoon2022.water.R
 import io.github.xmoon2022.water.ui.screen.settings.SettingItem
-import io.github.xmoon2022.water.utils.BackupManager
 import io.github.xmoon2022.water.utils.WebDavManager
 import kotlinx.coroutines.launch
 
-
 @Composable
-fun CloudBackupItem() {
+fun WebdavBackup() {
     val showDialog = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val isLoading = remember { mutableStateOf(false) }
@@ -40,11 +36,11 @@ fun CloudBackupItem() {
         title = "云备份/恢复",
         description = "使用 WebDev 网盘同步数据",
         icon = {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.import_export),
-                    contentDescription = "Cloud"
-                )
-               },
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.import_export),
+                contentDescription = "Cloud"
+            )
+        },
         onClick = { showDialog.value = true },
         content = {}
     )

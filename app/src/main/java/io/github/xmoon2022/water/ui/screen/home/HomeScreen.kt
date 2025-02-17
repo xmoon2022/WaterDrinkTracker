@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import io.github.xmoon2022.water.ui.screen.home.style.CheckList
 import io.github.xmoon2022.water.ui.screen.home.style.InteractiveWaterCard
-import io.github.xmoon2022.water.ui.screen.settings.items.DisplayStyle
+import io.github.xmoon2022.water.ui.screen.settings.screens.style_setting.items.DisplayStyle
 
 @Composable
 fun MainScreen() {

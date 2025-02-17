@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import io.github.xmoon2022.water.ui.screen.home.MainScreen
-import io.github.xmoon2022.water.ui.theme.waterTheme
+import io.github.xmoon2022.water.ui.theme.WaterTheme
 import io.github.xmoon2022.water.navigation.MainNavigation
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             //HideSystemBars()
-            waterTheme {
+            WaterTheme {
                 MainNavigation()
             }
         }
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true,showSystemUi = true)
 @Composable
 fun GreetingPreview() {
-    waterTheme {
+    WaterTheme {
         MainScreen()
     }
 }

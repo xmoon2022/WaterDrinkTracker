@@ -32,8 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.updateAll
 import io.github.xmoon2022.water.R
@@ -74,6 +76,13 @@ fun InteractiveWaterCard(target: Int) {
         GlanceWidget().updateAll(context)
     }
 
+    val customCardColors = CardDefaults.cardColors(
+        contentColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        disabledContentColor = MaterialTheme.colorScheme.surface,
+        disabledContainerColor = MaterialTheme.colorScheme.onSurface,
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -84,7 +93,8 @@ fun InteractiveWaterCard(target: Int) {
             modifier = Modifier
                 .width(280.dp)
                 .padding(16.dp),
-            elevation = CardDefaults.cardElevation(8.dp)
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = customCardColors
         ) {
             Column(
                 modifier = Modifier
@@ -141,23 +151,15 @@ fun WaterProgress(current: Int, target: Int) {
             CircularProgressIndicator(
                 progress = { current.toFloat() / target },
                 modifier = Modifier.size(200.dp),
-                color = Color.Blue.copy(alpha = 0.3f),
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 8.dp
             )
-
             Icon(
-                painter = painterResource(R.drawable.water),
+                imageVector = ImageVector.vectorResource(R.drawable.water),
                 contentDescription = null,
-                tint = Color.Blue,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(80.dp)
             )
         }
-
-        // 数字显示
-        Text(
-            text = "$current/${target}杯",
-            style = MaterialTheme.typography.displaySmall,
-            color = Color.Blue
-        )
     }
 }

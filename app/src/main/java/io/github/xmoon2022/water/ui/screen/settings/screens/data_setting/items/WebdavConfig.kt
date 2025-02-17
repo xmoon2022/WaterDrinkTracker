@@ -1,7 +1,6 @@
-package io.github.xmoon2022.water.ui.screen.settings.items
+package io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,18 +22,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.preference.PreferenceManager
 import io.github.xmoon2022.water.ui.screen.settings.SettingItem
 
 @Composable
-fun ConfigWebDevItem() {
+fun WebdavConfig() {
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
 
-    var url by remember { mutableStateOf(prefs.getString("webdev_url", ""))}
-    var username by remember { mutableStateOf(prefs.getString("webdev_user", ""))}
-    var password by remember { mutableStateOf(prefs.getString("webdev_pwd", ""))}
+    var url by remember { mutableStateOf(prefs.getString("webdev_url", "")) }
+    var username by remember { mutableStateOf(prefs.getString("webdev_user", "")) }
+    var password by remember { mutableStateOf(prefs.getString("webdev_pwd", "")) }
 
     SettingItem(
         title = "配置 WebDev",

@@ -12,7 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import io.github.xmoon2022.water.ui.screen.calendar.items.BottomWaterDataView
 import io.github.xmoon2022.water.ui.screen.calendar.items.CalendarGrid
 import io.github.xmoon2022.water.ui.screen.calendar.items.TopDateBar
-import io.github.xmoon2022.water.ui.theme.waterTheme
+import io.github.xmoon2022.water.ui.theme.WaterTheme
 import java.time.LocalDate
 
 @Composable
@@ -51,7 +51,7 @@ fun CalendarScreen() {
 @Preview(showBackground = true,showSystemUi = true)
 @Composable
 fun Preview(){
-    waterTheme {
+    WaterTheme {
         CalendarScreen()
     }
 }

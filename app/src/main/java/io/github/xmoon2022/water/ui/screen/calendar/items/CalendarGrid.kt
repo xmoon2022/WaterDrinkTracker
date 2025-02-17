@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -128,8 +129,8 @@ fun CalendarDayCell(
             // 背景色优先级：选中 > 当天 > 当前月
             .background(
                 color = when {
-                    isSelected -> Color.Blue.copy(alpha = 0.3f)
-                    calendarDate.isCurrentMonth -> Color.LightGray.copy(alpha = 0.3f)
+                    isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    calendarDate.isCurrentMonth -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     else -> Color.Transparent
                 },
                 shape = CircleShape
@@ -141,7 +142,7 @@ fun CalendarDayCell(
                     else -> 0.dp
                 },
                 color = when {
-                    isSelected -> Color.Blue
+                    isSelected -> MaterialTheme.colorScheme.primary
                     else -> Color.Transparent
                 },
                 shape = CircleShape
@@ -152,10 +153,10 @@ fun CalendarDayCell(
         Text(
             text = calendarDate.date.dayOfMonth.toString(),
             color = when {
-                isSelected -> Color.Blue
-                isToday -> Color.Green  // 当天文字颜色
-                calendarDate.isCurrentMonth -> Color.Black
-                else -> Color.Gray
+                isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+                isToday -> MaterialTheme.colorScheme.tertiary  // 当天文字颜色
+                calendarDate.isCurrentMonth -> MaterialTheme.colorScheme.onSurface
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             },
             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
         )
