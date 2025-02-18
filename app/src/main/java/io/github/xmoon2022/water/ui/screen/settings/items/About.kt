@@ -14,7 +14,7 @@ import io.github.xmoon2022.water.R
 import io.github.xmoon2022.water.ui.screen.settings.SettingItem
 
 @Composable
-fun about(){
+fun About(){
     SettingItem(
         title = "关于",
         icon = {
@@ -30,7 +30,7 @@ fun about(){
 //                    text = AnnotatedString("隐私政策"),
 //                    onClick = { /* 打开网页 */ }
 //                )
-            Text("版本号：1.0.0", color = Color.Gray)
+            Text("版本号：1.0.1", color = Color.Gray)
             Text("开发者：xmoon", color = Color.Gray)
         }
     }

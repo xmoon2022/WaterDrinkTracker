@@ -69,7 +69,7 @@ class GlanceWidget : GlanceAppWidget() {
         Column(
             modifier = GlanceModifier.fillMaxSize()
                 .background(Color.White),
-            verticalAlignment = Alignment.Top,
+            verticalAlignment = Alignment.CenterVertically,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "今日喝水 $count 杯", modifier = GlanceModifier.padding(12.dp))
@@ -85,7 +85,7 @@ class GlanceWidget : GlanceAppWidget() {
                     contentColor = GlanceTheme.colors.onSurfaceVariant,
                     onClick = actionRunCallback<IncrementAction>()
                 )
-
+                Spacer(modifier = GlanceModifier.width(8.dp))
                 CircleIconButton(
                     imageProvider = ImageProvider(R.drawable.ic_remove),
                     contentDescription = "减少",

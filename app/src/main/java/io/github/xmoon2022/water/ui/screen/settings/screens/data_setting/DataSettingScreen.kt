@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.xmoon2022.water.navigation.Screen
 import io.github.xmoon2022.water.ui.screen.settings.SettingsScreen
+import io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items.HistoryDataChange
 import io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items.LocalBackup
 import io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items.WebdavBackup
 import io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items.WebdavConfig
@@ -29,5 +30,7 @@ fun DataSettingScreen(){
         WebdavBackup()
         Spacer(modifier = Modifier.height(4.dp))
         WebdavConfig()
+        Spacer(modifier = Modifier.height(4.dp))
+        HistoryDataChange()
     }
 }

@@ -16,7 +16,7 @@ import io.github.xmoon2022.water.ui.screen.settings.SettingItem
 fun DataSetting(navController: NavController) {
     SettingItem(
         title = "数据管理",
-        description = "本地数据备份，webdav数据备份",
+        description = "本地数据备份，webdav数据备份,历史数据修改",
         icon = {
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.backup),

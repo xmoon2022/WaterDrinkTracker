@@ -153,8 +153,8 @@ fun CalendarDayCell(
         Text(
             text = calendarDate.date.dayOfMonth.toString(),
             color = when {
-                isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
-                isToday -> MaterialTheme.colorScheme.tertiary  // 当天文字颜色
+                isSelected -> MaterialTheme.colorScheme.inversePrimary
+                isToday -> MaterialTheme.colorScheme.inversePrimary  // 当天文字颜色
                 calendarDate.isCurrentMonth -> MaterialTheme.colorScheme.onSurface
                 else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             },
@@ -167,7 +167,7 @@ fun CalendarDayCell(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .size(6.dp)
-                    .background(Color.Blue, CircleShape)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
                     .padding(bottom = 4.dp)
             )
         }

@@ -23,7 +23,7 @@ fun CalendarScreen() {
     }
     // 使用完整日期作为主状态
     var currentDate by remember { mutableStateOf(LocalDate.now()) }
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(currentDate) }
 
     Column {
         TopDateBar(

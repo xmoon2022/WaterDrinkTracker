@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -66,7 +67,7 @@ fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPrefe
                         Text(
                             text = buildAnnotatedString {
                                 append("今日完成喝水 ")
-                                withStyle(style = SpanStyle(color = Color.Blue)) {
+                                withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
                                     append("$cups")
                                 }
                                 append(" 杯")
