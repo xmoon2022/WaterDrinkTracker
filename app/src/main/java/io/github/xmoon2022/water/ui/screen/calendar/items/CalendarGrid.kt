@@ -17,17 +17,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import io.github.xmoon2022.water.ui.screen.calendar.model.CalendarViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
 
 data class CalendarDate(
     val date: LocalDate,      // 具体日期
@@ -35,35 +44,17 @@ data class CalendarDate(
 )
 
 fun generateCalendarDates(baseDate: LocalDate): List<CalendarDate> {
-    val firstDayOfMonth = baseDate.withDayOfMonth(1)
-    val startOfWeek = DayOfWeek.MONDAY // 假设周起始日为周日
-    // 计算当月的第一天是周几的偏移量
-    val dayOfWeek = firstDayOfMonth.dayOfWeek
-    val offset = (dayOfWeek.value - startOfWeek.value + 7) % 7
-    // 生成上个月补白的日期
-    val prevMonthDates = (1..offset).map { offsetDay ->
-        val date = firstDayOfMonth.minusDays(offset - offsetDay.toLong() + 1)
-        CalendarDate(date, false)
-    }
+    val yearMonth = YearMonth.from(baseDate)
+    val firstDay = yearMonth.atDay(1)
+    val lastDay = yearMonth.atEndOfMonth()
 
-    // 生成当前月的所有日期
-    val currentMonthDates = (1..baseDate.lengthOfMonth()).map { day ->
-        val date = firstDayOfMonth.withDayOfMonth(day)
-        CalendarDate(date, true)
-    }
+    val startDate = firstDay.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val endDate = lastDay.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
 
-    // 计算需要补足的下个月天数
-    val totalDays = prevMonthDates.size + currentMonthDates.size
-    val nextMonthPadding = (7 - (totalDays % 7)) % 7
-
-    // 生成下个月补白的日期
-    val nextMonthStart = firstDayOfMonth.plusMonths(1)
-    val nextMonthDates = (0 until nextMonthPadding).map { day ->
-        val date = nextMonthStart.plusDays(day.toLong())
-        CalendarDate(date, false)
-    }
-
-    return prevMonthDates + currentMonthDates + nextMonthDates
+    return generateSequence(startDate) { it.plusDays(1) }
+        .takeWhile { !it.isAfter(endDate) }
+        .map { CalendarDate(it, YearMonth.from(it) == yearMonth) }
+        .toList()
 }
 
 // 更新 CalendarGrid 参数
@@ -72,24 +63,20 @@ fun CalendarGrid(
     baseDate: LocalDate,
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit,
-    sharedPreferences: SharedPreferences
+    viewModel: CalendarViewModel // 接收 ViewModel
 ) {
     val calendarDates = remember(baseDate) {
         generateCalendarDates(baseDate)
     }
 
-    // 高亮有数据的日期
-    val markedDates = remember(baseDate) {
-        val historyJson = sharedPreferences.getString("daily_counts", "{}")
-        val historyType = object : TypeToken<Map<String, Int>>() {}.type
-        Gson().fromJson<Map<String, Int>>(historyJson, historyType)?.keys ?: emptySet()
-    }
-
     Column(modifier = Modifier.fillMaxWidth()) {
         WeekDaysRow()
         LazyVerticalGrid(columns = GridCells.Fixed(7)) {
-            items(calendarDates) { calendarDate ->
-                val isMarked = markedDates.contains(
+            items(
+                items = calendarDates,
+                key = { it.date.toString() }
+            ) { calendarDate ->
+                val isMarked = viewModel.markedDates.contains(
                     calendarDate.date.format(DateTimeFormatter.ISO_LOCAL_DATE)
                 )
 

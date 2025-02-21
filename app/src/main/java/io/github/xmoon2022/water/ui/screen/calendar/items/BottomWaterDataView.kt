@@ -24,19 +24,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.xmoon2022.water.ui.screen.calendar.model.CalendarViewModel
 import io.github.xmoon2022.water.utils.loadHistory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun BottomWaterDataView(selectedDate: LocalDate?, sharedPreferences: SharedPreferences) {
+fun BottomWaterDataView(
+    selectedDate: LocalDate?,
+    viewModel: CalendarViewModel
+) {
     // 从 SharedPreferences 获取喝水数据
     val (cups, formattedDate) = remember(selectedDate) {
         if (selectedDate != null) {
-            val dateStr = selectedDate.toString() // 直接使用 ISO 格式
-            val history = sharedPreferences.loadHistory()
-            val cups = history[dateStr] ?: 0
-            Pair(cups, selectedDate.format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")))
+            val dateStr = selectedDate.toString()
+            val cups = viewModel.dailyCounts[dateStr] ?: 0
+            val formattedDate = selectedDate.format(DateTimeFormatter.ofPattern("yyyy年MM月dd日"))
+            Pair(cups, formattedDate)
         } else {
             Pair(0, "")
         }
