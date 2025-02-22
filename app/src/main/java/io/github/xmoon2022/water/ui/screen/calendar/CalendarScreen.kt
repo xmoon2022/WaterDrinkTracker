@@ -3,11 +3,8 @@ package io.github.xmoon2022.water.ui.screen.calendar
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
@@ -26,9 +23,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.xmoon2022.water.ui.screen.calendar.items.BottomWaterDataView
 import io.github.xmoon2022.water.ui.screen.calendar.items.CalendarGrid
 import io.github.xmoon2022.water.ui.screen.calendar.items.TopDateBar
+import io.github.xmoon2022.water.ui.screen.calendar.items.WeekDaysRow
 import io.github.xmoon2022.water.ui.screen.calendar.model.CalendarViewModel
 import io.github.xmoon2022.water.ui.theme.WaterTheme
 import java.time.LocalDate
+import java.time.YearMonth
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -63,9 +62,9 @@ fun CalendarScreen() {
                 slideDirection = direction // 更新 slideDirection
             }
         )
-
+        WeekDaysRow()
         AnimatedContent(
-            targetState = currentDate,
+            targetState = YearMonth.from(currentDate),
             transitionSpec = {
                 val direction = slideDirection
                 slideInHorizontally(
@@ -78,17 +77,20 @@ fun CalendarScreen() {
                         )
             },
             label = "CalendarAnimation"
-        ) { targetDate ->
+        ) { targetYearMonth ->
             CalendarGrid(
-                baseDate = targetDate,
+                baseDate = currentDate,
                 selectedDate = selectedDate,
                 onDateClick = { date ->
-                    val newDirection = if (date > currentDate) 1 else -1
-                    slideDirection = newDirection
+                    val newYearMonth = YearMonth.from(date)
+
+                    if (newYearMonth != targetYearMonth) {
+                        slideDirection = if (date.isAfter(currentDate)) 1 else -1
+                        currentDate = date
+                    }
                     selectedDate = date
-                    currentDate = date
                 },
-                viewModel = viewModel // 传递 ViewModel
+                viewModel = viewModel
             )
         }
 

@@ -1,6 +1,5 @@
 package io.github.xmoon2022.water.ui.screen.calendar.items
 
-import android.content.SharedPreferences
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,21 +16,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.github.xmoon2022.water.ui.screen.calendar.model.CalendarViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -70,20 +61,20 @@ fun CalendarGrid(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        WeekDaysRow()
         LazyVerticalGrid(columns = GridCells.Fixed(7)) {
             items(
                 items = calendarDates,
                 key = { it.date.toString() }
             ) { calendarDate ->
-                val isMarked = viewModel.markedDates.contains(
-                    calendarDate.date.format(DateTimeFormatter.ISO_LOCAL_DATE)
-                )
+                val dateStr = calendarDate.date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                val currentCount = viewModel.dailyCounts[dateStr]
+                val dailyGoal = viewModel.dailyGoal
 
                 CalendarDayCell(
                     calendarDate = calendarDate,
                     isSelected = calendarDate.date == selectedDate,
-                    isMarked = isMarked,
+                    currentCount = currentCount,  // 新增参数
+                    dailyGoal = dailyGoal,
                     isToday = calendarDate.date == LocalDate.now(),
                     onClick = {
                         if (calendarDate.isCurrentMonth) {
@@ -101,8 +92,9 @@ fun CalendarGrid(
 fun CalendarDayCell(
     calendarDate: CalendarDate,
     isSelected: Boolean,
-    isMarked: Boolean,
-    isToday: Boolean,  // 新增参数
+    currentCount: Int?,
+    dailyGoal: Int,
+    isToday: Boolean,
     onClick: () -> Unit
 ) {
     Box(
@@ -149,12 +141,18 @@ fun CalendarDayCell(
         )
 
         // 数据标记点（显示在当天标识下方）
-        if (isMarked && !isSelected) {
+        if ((currentCount != null) && !isSelected) {
+            val markColor = if (currentCount >= dailyGoal) {
+                Color.Green
+            } else {
+                MaterialTheme.colorScheme.primary
+            }
+
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .size(6.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    .background(markColor, CircleShape)
                     .padding(bottom = 4.dp)
             )
         }
