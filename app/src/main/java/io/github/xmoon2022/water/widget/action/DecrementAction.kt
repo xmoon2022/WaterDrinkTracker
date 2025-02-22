@@ -6,10 +6,11 @@ import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.updateAll
-import io.github.xmoon2022.water.widget.GlanceWidget
 import io.github.xmoon2022.water.utils.DateUtils
 import io.github.xmoon2022.water.utils.getTodayCount
 import io.github.xmoon2022.water.utils.saveTodayCount
+import io.github.xmoon2022.water.widget.NarrowWidget
+import io.github.xmoon2022.water.widget.WideWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -30,7 +31,8 @@ class DecrementAction : ActionCallback {
             // 更新 Widget
             // 使用 withContext 确保在主线程更新
             withContext(Dispatchers.Main) {
-                GlanceWidget().updateAll(context)
+                WideWidget().updateAll(context)
+                NarrowWidget().updateAll(context)
             }
         } catch (e: Exception) {
             Log.e("Widget", "Decrement Error", e)

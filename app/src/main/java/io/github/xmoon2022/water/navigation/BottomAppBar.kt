@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
@@ -56,7 +57,11 @@ fun BottomBar(navController: NavController) {
                 IconButton(
                     onClick = {
                         navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
                             launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     modifier = Modifier.size(iconButtonSize) // 控制点击区域大小

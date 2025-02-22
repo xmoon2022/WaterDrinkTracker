@@ -48,19 +48,8 @@ import io.github.xmoon2022.water.widget.action.IncrementAction
 import io.github.xmoon2022.water.utils.DateUtils
 import io.github.xmoon2022.water.utils.getTodayCount
 
-class GlanceWidget : GlanceAppWidget() {
-    companion object {
-        private val One_One = DpSize(57.dp, 102.dp)
-        private val Two_One = DpSize(130.dp, 102.dp)
-    }
-
-    override val sizeMode = SizeMode.Responsive(
-        setOf(
-            One_One,
-            Two_One
-        )
-    )
-
+// 宽布局微件 (2x1)
+class WideWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
@@ -82,84 +71,109 @@ class GlanceWidget : GlanceAppWidget() {
                 }
             }
             GlanceTheme{
-                MyContent(count)
+                WideLayoutContent(count)
             }
         }
     }
-
     @Composable
-    private fun MyContent(count: Int) {
-        val size = LocalSize.current
-        if (size.width>= One_One.width)
-        {
-            Column(
-                modifier = GlanceModifier.fillMaxSize()
-                    .background(Color.White),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalAlignment = Alignment.CenterHorizontally
+    private fun WideLayoutContent(count: Int) {
+        Column(
+            modifier = GlanceModifier.fillMaxSize()
+                .background(Color.White),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "今日喝水 $count 杯", modifier = GlanceModifier.padding(12.dp))
+            Row(
+                modifier = GlanceModifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "今日喝水 $count 杯", modifier = GlanceModifier.padding(12.dp))
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CircleIconButton(
-                        imageProvider = ImageProvider(R.drawable.ic_add),
-                        contentDescription = "增加",
-                        backgroundColor = colors.surfaceVariant,
-                        contentColor = colors.onSurfaceVariant,
-                        onClick = actionRunCallback<IncrementAction>()
-                    )
-                    Spacer(modifier = GlanceModifier.width(8.dp))
-                    CircleIconButton(
-                        imageProvider = ImageProvider(R.drawable.ic_remove),
-                        contentDescription = "减少",
-                        backgroundColor = colors.surfaceVariant,
-                        contentColor = colors.onSurfaceVariant,
-                        onClick = actionRunCallback<DecrementAction>()
-                    )
-                }
-            }
-        }
-        if (size.width<= One_One.width)
-        {
-            Column(
-                modifier = GlanceModifier.fillMaxSize()
-                    .background(Color.White),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // 上方增加按钮
                 CircleIconButton(
                     imageProvider = ImageProvider(R.drawable.ic_add),
                     contentDescription = "增加",
                     backgroundColor = colors.surfaceVariant,
                     contentColor = colors.onSurfaceVariant,
-                    onClick = actionRunCallback<IncrementAction>(),
-                    modifier = GlanceModifier.size(24.dp)
+                    onClick = actionRunCallback<IncrementAction>()
                 )
-
-                // 圆形计数显示
-                Text(
-                    text = count.toString(),
-                    style = TextStyle(
-                        color = colors.onSurfaceVariant, // 与按钮颜色一致
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-
-                // 下方减少按钮
+                Spacer(modifier = GlanceModifier.width(8.dp))
                 CircleIconButton(
                     imageProvider = ImageProvider(R.drawable.ic_remove),
                     contentDescription = "减少",
                     backgroundColor = colors.surfaceVariant,
                     contentColor = colors.onSurfaceVariant,
-                    onClick = actionRunCallback<DecrementAction>(),
-                    modifier = GlanceModifier.size(24.dp)
+                    onClick = actionRunCallback<DecrementAction>()
                 )
             }
+        }
+    }
+}
+
+// 窄布局微件 (1x2)
+class NarrowWidget : GlanceAppWidget() {
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+        provideContent {
+            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            var count by remember { mutableIntStateOf(prefs.getTodayCount())}
+            DateUtils.checkDailyReset(prefs) // 触发日期变更逻辑
+            // 监听SharedPreferences的变化
+            val listener = remember {
+                SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                    if (key == "daily_counts") {
+                        count = prefs.getTodayCount()
+                    }
+                }
+            }
+
+            DisposableEffect(Unit) {
+                prefs.registerOnSharedPreferenceChangeListener(listener)
+                onDispose {
+                    prefs.unregisterOnSharedPreferenceChangeListener(listener)
+                }
+            }
+            GlanceTheme{
+                NarrowLayoutContent(count)
+            }
+        }
+    }
+
+    @Composable
+    private fun NarrowLayoutContent(count: Int) {
+        Column(
+            modifier = GlanceModifier.fillMaxSize()
+                .background(Color.White),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 上方增加按钮
+            CircleIconButton(
+                imageProvider = ImageProvider(R.drawable.ic_add),
+                contentDescription = "增加",
+                backgroundColor = colors.surfaceVariant,
+                contentColor = colors.onSurfaceVariant,
+                onClick = actionRunCallback<IncrementAction>(),
+                modifier = GlanceModifier.size(24.dp)
+            )
+
+            // 圆形计数显示
+            Text(
+                text = count.toString(),
+                style = TextStyle(
+                    color = colors.onSurfaceVariant, // 与按钮颜色一致
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
+            // 下方减少按钮
+            CircleIconButton(
+                imageProvider = ImageProvider(R.drawable.ic_remove),
+                contentDescription = "减少",
+                backgroundColor = colors.surfaceVariant,
+                contentColor = colors.onSurfaceVariant,
+                onClick = actionRunCallback<DecrementAction>(),
+                modifier = GlanceModifier.size(24.dp)
+            )
         }
     }
 }

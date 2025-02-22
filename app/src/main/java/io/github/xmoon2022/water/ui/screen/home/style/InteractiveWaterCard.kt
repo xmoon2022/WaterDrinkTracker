@@ -2,6 +2,12 @@ package io.github.xmoon2022.water.ui.screen.home.style
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -31,6 +38,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -42,7 +52,8 @@ import io.github.xmoon2022.water.R
 import io.github.xmoon2022.water.utils.DateUtils
 import io.github.xmoon2022.water.utils.getTodayCount
 import io.github.xmoon2022.water.utils.saveTodayCount
-import io.github.xmoon2022.water.widget.GlanceWidget
+import io.github.xmoon2022.water.widget.NarrowWidget
+import io.github.xmoon2022.water.widget.WideWidget
 
 @Composable
 fun InteractiveWaterCard(target: Int) {
@@ -73,7 +84,8 @@ fun InteractiveWaterCard(target: Int) {
 
     LaunchedEffect(current) {
         prefs.saveTodayCount(current)
-        GlanceWidget().updateAll(context)
+        WideWidget().updateAll(context)
+        NarrowWidget().updateAll(context)
     }
 
     val customCardColors = CardDefaults.cardColors(
@@ -123,7 +135,14 @@ private fun ControlButtons(
     onValueChange: (Int) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { onValueChange((current - 1).coerceAtLeast(0)) }) {
+        IconButton(
+            onClick = {
+                onValueChange((current - 1).coerceAtLeast(0))
+            },
+            modifier = Modifier
+                .padding(8.dp)
+                .clip(CircleShape)
+        ) {
             Icon(Icons.Default.KeyboardArrowDown, "Decrease")
         }
         Text(
@@ -131,11 +150,16 @@ private fun ControlButtons(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        IconButton(onClick = {
-            if (current < target) {
-                onValueChange(current + 1)
-            }
-        }) {
+        IconButton(
+            onClick = {
+                if (current < target) {
+                    onValueChange(current + 1)
+                }
+            },
+            modifier = Modifier
+                .padding(8.dp)
+                .clip(CircleShape)
+        ) {
             Icon(Icons.Default.KeyboardArrowUp, "Increase")
         }
     }
@@ -143,22 +167,54 @@ private fun ControlButtons(
 
 @Composable
 fun WaterProgress(current: Int, target: Int) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // 水滴容器
+    // 进度动画（带弹性效果）
+    val animatedProgress by animateFloatAsState(
+        targetValue = current.toFloat() / target,
+        animationSpec = spring(
+            dampingRatio = 0.6f,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "progress"
+    )
+
+    // 颜色动画（当达到目标时变绿）
+    val targetColor = if (current >= target) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+    val animatedColor by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = tween(800),
+        label = "waterColor"
+    )
+
+    // 水滴缩放动画（数值变化时跳动）
+    val scale = remember { Animatable(1f) }
+    LaunchedEffect(current) {
+        if (current > 0) {
+            scale.animateTo(
+                targetValue = 1.2f,
+                animationSpec = tween(150)
+            )
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(150)
+            )
+        }
+    }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Center) {
             CircularProgressIndicator(
-                progress = { current.toFloat() / target },
-                modifier = Modifier.size(200.dp),
-                color = MaterialTheme.colorScheme.primary,
+                progress = { animatedProgress },
+                modifier = Modifier
+                    .size(200.dp),
+                color = animatedColor,
                 strokeWidth = 8.dp
             )
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.water),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(80.dp)
+                tint = animatedColor,
+                modifier = Modifier
+                    .size(80.dp)
+                    .scale(scale.value)
             )
         }
     }

@@ -29,7 +29,8 @@ import androidx.glance.appwidget.updateAll
 import io.github.xmoon2022.water.utils.DateUtils
 import io.github.xmoon2022.water.utils.getTodayCount
 import io.github.xmoon2022.water.utils.saveTodayCount
-import io.github.xmoon2022.water.widget.GlanceWidget
+import io.github.xmoon2022.water.widget.NarrowWidget
+import io.github.xmoon2022.water.widget.WideWidget
 
 @Composable
 fun CheckList(
@@ -65,7 +66,8 @@ fun CheckList(
     // 状态同步
     LaunchedEffect(current) {
         prefs.saveTodayCount(current)
-        GlanceWidget().updateAll(context)
+        WideWidget().updateAll(context)
+        NarrowWidget().updateAll(context)
     }
 
     Box(

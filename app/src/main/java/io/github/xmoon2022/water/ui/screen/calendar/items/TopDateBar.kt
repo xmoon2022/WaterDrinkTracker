@@ -61,7 +61,8 @@ private fun showDatePicker(
 @Composable
 fun TopDateBar(
     currentDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelected: (LocalDate) -> Unit,
+    onSlideDirectionChanged: (Int) -> Unit
 ) {
     val context = LocalContext.current
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日")
@@ -76,6 +77,7 @@ fun TopDateBar(
         // 上月按钮
         TextButton(
             onClick = {
+                onSlideDirectionChanged(-1)
                 val newDate = currentDate.minusMonths(1)
                 onDateSelected(newDate)
             },
@@ -106,6 +108,7 @@ fun TopDateBar(
         // 下月按钮
         TextButton(
             onClick = {
+                onSlideDirectionChanged(1)
                 val newDate = currentDate.plusMonths(1)
                 onDateSelected(newDate)
             },
