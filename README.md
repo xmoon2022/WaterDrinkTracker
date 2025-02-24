@@ -9,11 +9,13 @@
 一款基于Kotlin和Jetpack Compose开发的Android饮水追踪应用，帮助你培养健康饮水习惯🥤
 
 截图预览 
-![主界面.jpg](app%2Fimg%2F%E4%B8%BB%E7%95%8C%E9%9D%A2.jpg)
-![日历界面.jpg](app%2Fimg%2F%E6%97%A5%E5%8E%86%E7%95%8C%E9%9D%A2.jpg)
-![设置界面.jpg](app%2Fimg%2F%E8%AE%BE%E7%BD%AE%E7%95%8C%E9%9D%A2.jpg)
-![小组件.jpg](app%2Fimg%2F%E5%B0%8F%E7%BB%84%E4%BB%B6.jpg)
-
+<div align="center">
+  <img src="app%2Fimg%2F%E4%B8%BB%E7%95%8C%E9%9D%A2.jpg" width="200" alt="主界面"/>
+  <img src="app%2Fimg%2F%E6%97%A5%E5%8E%86%E7%95%8C%E9%9D%A2.jpg" width="200" alt="日历界面"/>
+  <img src="app%2Fimg%2F%E8%AE%BE%E7%BD%AE%E7%95%8C%E9%9D%A2.jpg" width="200" alt="设置界面"/>
+  <img src="app%2Fimg%2F%E5%B0%8F%E7%BB%84%E4%BB%B6.jpg" width="200" alt="小组件"/>
+</div>
+说明：
 ## ✨ 主要功能
 ### 核心功能
 - 📅 日历视图：直观查看每日饮水记录
