@@ -82,6 +82,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation (libs.sardine.android.v09)
+    implementation(libs.androidx.media)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

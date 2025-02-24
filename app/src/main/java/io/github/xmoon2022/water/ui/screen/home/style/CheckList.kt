@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.appwidget.updateAll
+import io.github.xmoon2022.water.notification.NotificationHelper
 import io.github.xmoon2022.water.utils.DateUtils
 import io.github.xmoon2022.water.utils.getTodayCount
 import io.github.xmoon2022.water.utils.saveTodayCount
@@ -68,6 +69,9 @@ fun CheckList(
         prefs.saveTodayCount(current)
         WideWidget().updateAll(context)
         NarrowWidget().updateAll(context)
+        if (prefs.getBoolean("notification_enabled", false)) {
+            NotificationHelper.updateNotification(context, prefs)
+        }
     }
 
     Box(
