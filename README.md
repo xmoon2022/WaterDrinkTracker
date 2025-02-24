@@ -15,7 +15,7 @@
   <img src="app%2Fimg%2F%E8%AE%BE%E7%BD%AE%E7%95%8C%E9%9D%A2.png" width="200" alt="设置界面"/>
   <img src="app%2Fimg%2F%E5%B0%8F%E7%BB%84%E4%BB%B6.png" width="200" alt="小组件"/>
 </div>
-说明：
+
 ## ✨ 主要功能
 ### 核心功能
 - 📅 日历视图：直观查看每日饮水记录
