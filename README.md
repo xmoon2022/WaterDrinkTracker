@@ -69,7 +69,7 @@ git clone https://github.com/xmoon2022/WaterDrinkTracker.git
 欢迎任何形式的贡献！可以多提一些issues
 
 ## 📄 许可证
-本项目采用 MIT License
+本项目采用 [GPLv3.0 License](LICENSE)
 
 ## 🙏 致谢
 感谢Jetpack Compose官方文档
