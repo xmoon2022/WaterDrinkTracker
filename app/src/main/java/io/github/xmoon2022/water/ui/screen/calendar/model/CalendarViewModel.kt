@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 
 class CalendarViewModel(private val sharedPreferences: SharedPreferences) : ViewModel() {
     private var _dailyCounts by mutableStateOf<Map<String, Int>>(emptyMap())
@@ -31,6 +32,24 @@ class CalendarViewModel(private val sharedPreferences: SharedPreferences) : View
             val type = object : TypeToken<Map<String, Int>>() {}.type
             _dailyCounts = Gson().fromJson(historyJson, type) ?: emptyMap()
             _dailyGoal = sharedPreferences.getInt("daily_goal", 8)
+        }
+    }
+
+    fun updateDailyCount(date: LocalDate, count: Int) {
+        val dateKey = date.toString()
+        val newMap = _dailyCounts.toMutableMap().apply {
+            if (count > 0) {
+                this[dateKey] = count
+            } else {
+                remove(dateKey)
+            }
+        }
+        _dailyCounts = newMap
+
+        viewModelScope.launch(Dispatchers.IO) {
+            sharedPreferences.edit()
+                .putString("daily_counts", Gson().toJson(newMap))
+                .apply()
         }
     }
 }
