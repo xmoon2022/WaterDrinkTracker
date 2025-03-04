@@ -1,4 +1,4 @@
-package io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.items
+package io.github.xmoon2022.water.utils
 
 import android.content.Context
 import android.widget.Toast
@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,23 +26,12 @@ import androidx.compose.ui.unit.dp
 import io.github.xmoon2022.water.ui.screen.settings.SettingItem
 
 @Composable
-fun WebdavConfig() {
+fun WebDavConfig(showDialog: MutableState<Boolean>) {
     val context = LocalContext.current
-    val showDialog = remember { mutableStateOf(false) }
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
-
     var url by remember { mutableStateOf(prefs.getString("webdev_url", "")) }
     var username by remember { mutableStateOf(prefs.getString("webdev_user", "")) }
     var password by remember { mutableStateOf(prefs.getString("webdev_pwd", "")) }
-
-    SettingItem(
-        title = "配置 WebDev",
-        description = "当前服务端: ${prefs.getString("webdev_url", "未配置")}",
-        icon = { Icon(Icons.Default.Settings, "配置") },
-        onClick = { showDialog.value = true },
-        content = {}
-    )
-
     if (showDialog.value) {
         AlertDialog(
             onDismissRequest = { showDialog.value = false },

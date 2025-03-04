@@ -30,7 +30,7 @@ fun About(){
 //                    text = AnnotatedString("隐私政策"),
 //                    onClick = { /* 打开网页 */ }
 //                )
-            Text("版本号：1.0.2", color = Color.Gray)
+            Text("版本号：1.0.3", color = Color.Gray)
             Text("开发者：xmoon", color = Color.Gray)
         }
     }
