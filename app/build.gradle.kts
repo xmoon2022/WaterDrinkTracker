@@ -71,7 +71,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.runtime.android)
     implementation(libs.androidx.tools.core)
-    //implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.gson)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.glance)

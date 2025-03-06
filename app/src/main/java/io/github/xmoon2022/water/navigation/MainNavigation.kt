@@ -1,5 +1,7 @@
 package io.github.xmoon2022.water.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
@@ -17,6 +19,8 @@ import io.github.xmoon2022.water.ui.screen.calendar.CalendarScreen
 import io.github.xmoon2022.water.ui.screen.calendar.items.CalendarFabButton
 import io.github.xmoon2022.water.ui.screen.home.MainScreen
 import io.github.xmoon2022.water.ui.screen.settings.SettingsScreen
+import io.github.xmoon2022.water.ui.screen.settings.screens.about_setting.AboutSettingScreen
+import io.github.xmoon2022.water.ui.screen.settings.screens.about_setting.screens.DependentScreen
 import io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.DataSettingScreen
 import io.github.xmoon2022.water.ui.screen.settings.screens.style_setting.StyleSettingScreen
 
@@ -26,8 +30,11 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("Settings")
     data object StyleSettings : Screen("setting_style")
     data object DataSettings : Screen("setting_data")
+    data object AboutSettings : Screen("setting_about")
+    data object Dependent : Screen("setting_about_dependent")
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
@@ -59,6 +66,8 @@ fun MainNavigation() {
             composable(Screen.Settings.route) { SettingsScreen(navController) }
             composable(Screen.StyleSettings.route) { StyleSettingScreen() }
             composable(Screen.DataSettings.route) { DataSettingScreen() }
+            composable(Screen.AboutSettings.route) { AboutSettingScreen(navController) }
+            composable(Screen.Dependent.route) { DependentScreen() }
         }
     }
 }

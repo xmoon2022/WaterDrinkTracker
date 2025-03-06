@@ -8,13 +8,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import io.github.xmoon2022.water.R
+import io.github.xmoon2022.water.navigation.Screen
 import io.github.xmoon2022.water.ui.screen.settings.SettingItem
 
 @Composable
-fun About(){
+fun AboutSetting(navController: NavController) {
     SettingItem(
         title = "关于",
         icon = {
@@ -24,13 +27,10 @@ fun About(){
                 modifier = Modifier.size(24.dp)
             )
         },
-    ) {
+        onClick = { navController.navigate(Screen.AboutSettings.route) }
+    ){
         Column {
-//                ClickableText(
-//                    text = AnnotatedString("隐私政策"),
-//                    onClick = { /* 打开网页 */ }
-//                )
-            Text("版本号：1.0.3", color = Color.Gray)
+            Text("版本号：${stringResource(id = R.string.version)}", color = Color.Gray)
             Text("开发者：xmoon", color = Color.Gray)
         }
     }
