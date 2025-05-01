@@ -22,6 +22,7 @@ import io.github.xmoon2022.water.ui.screen.settings.SettingsScreen
 import io.github.xmoon2022.water.ui.screen.settings.screens.about_setting.AboutSettingScreen
 import io.github.xmoon2022.water.ui.screen.settings.screens.about_setting.screens.DependentScreen
 import io.github.xmoon2022.water.ui.screen.settings.screens.data_setting.DataSettingScreen
+import io.github.xmoon2022.water.ui.screen.settings.screens.notice_setting.NoticeSettingScreen
 import io.github.xmoon2022.water.ui.screen.settings.screens.style_setting.StyleSettingScreen
 
 sealed class Screen(val route: String) {
@@ -30,6 +31,7 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("Settings")
     data object StyleSettings : Screen("setting_style")
     data object DataSettings : Screen("setting_data")
+    data object NoticeSettings : Screen("setting_notice")
     data object AboutSettings : Screen("setting_about")
     data object Dependent : Screen("setting_about_dependent")
 }
@@ -66,6 +68,7 @@ fun MainNavigation() {
             composable(Screen.Settings.route) { SettingsScreen(navController) }
             composable(Screen.StyleSettings.route) { StyleSettingScreen() }
             composable(Screen.DataSettings.route) { DataSettingScreen() }
+            composable(Screen.NoticeSettings.route) { NoticeSettingScreen() }
             composable(Screen.AboutSettings.route) { AboutSettingScreen(navController) }
             composable(Screen.Dependent.route) { DependentScreen() }
         }

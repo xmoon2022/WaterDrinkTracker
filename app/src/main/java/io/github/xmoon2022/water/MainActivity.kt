@@ -11,9 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import io.github.xmoon2022.water.navigation.MainNavigation
+import io.github.xmoon2022.water.notification.HydrationReminderHelper
+import io.github.xmoon2022.water.notification.HydrationReminderScheduler
 import io.github.xmoon2022.water.notification.NotificationHelper
 import io.github.xmoon2022.water.ui.screen.home.MainScreen
 import io.github.xmoon2022.water.ui.theme.WaterTheme
+import io.github.xmoon2022.water.utils.isAutoNoticeEnabled
 
 class MainActivity : ComponentActivity() {
     private val prefs by lazy {
@@ -25,15 +28,26 @@ class MainActivity : ComponentActivity() {
         NotificationHelper.createNotificationChannel(this)
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        checkScheduledNotifications(this)
         setContent {
             //HideSystemBars()
             WaterTheme {
                 if (prefs.getBoolean("notification_enabled", true)) {
                     NotificationHelper.showNotification(this, prefs)
                 }
+                if (prefs.getBoolean("auto_notice",true)) {
+                    HydrationReminderHelper.createNotificationChannel(this)
+                }
                 MainNavigation()
             }
         }
+    }
+}
+
+fun checkScheduledNotifications(context: Context) {
+    val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    if (prefs.isAutoNoticeEnabled()) {
+        HydrationReminderScheduler.schedule(context)
     }
 }
 

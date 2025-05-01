@@ -14,7 +14,7 @@ import androidx.navigation.NavController
 import io.github.xmoon2022.water.ui.screen.settings.items.AboutSetting
 import io.github.xmoon2022.water.ui.screen.settings.items.DailyGoal
 import io.github.xmoon2022.water.ui.screen.settings.items.DataSetting
-import io.github.xmoon2022.water.ui.screen.settings.items.ShowNotification
+import io.github.xmoon2022.water.ui.screen.settings.items.NoticeSetting
 import io.github.xmoon2022.water.ui.screen.settings.items.StyleSetting
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -32,7 +32,7 @@ fun SettingsScreen(navController: NavController){
         Spacer(modifier = Modifier.height(4.dp))
         DataSetting(navController)
         Spacer(modifier = Modifier.height(4.dp))
-        ShowNotification()
+        NoticeSetting(navController)
         Spacer(modifier = Modifier.height(4.dp))
         AboutSetting(navController)
     }

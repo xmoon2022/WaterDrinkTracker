@@ -49,3 +49,11 @@ fun SharedPreferences.saveTodayCount(count: Int) {
     history[LocalDate.now().toString()] = count
     saveHistory(history)
 }
+//定时通知的字段
+fun SharedPreferences.isAutoNoticeEnabled(): Boolean {
+    return getBoolean("auto_notice", true)
+}
+
+fun SharedPreferences.setAutoNoticeEnabled(enabled: Boolean) {
+    edit().putBoolean("auto_notice", enabled).apply()
+}

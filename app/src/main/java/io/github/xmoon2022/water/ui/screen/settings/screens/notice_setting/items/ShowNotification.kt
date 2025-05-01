@@ -1,8 +1,6 @@
-package io.github.xmoon2022.water.ui.screen.settings.items
+package io.github.xmoon2022.water.ui.screen.settings.screens.notice_setting.items
 
-import android.app.Activity.MODE_PRIVATE
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
